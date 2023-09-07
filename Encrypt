@@ -156,7 +156,7 @@ function warp(world,id)
         while getBot().world ~= world:upper() and not nuked do
             sendPacket("action|join_request\nname|"..bz.."\ninvitedWorld|0",3)
             sleep(setting.delay.warp)
-            if join >= 50 then
+            if join == 50 then
                 print("World after : "..getBot().world.." is inacessible!, skipped world")
                 sleep(e)
                 infokand(setting.webhook.nuked,"```World after : "..getBot().world.." is inacessible !``` @everyone")
