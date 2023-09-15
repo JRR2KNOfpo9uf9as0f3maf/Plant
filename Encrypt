@@ -3,7 +3,6 @@ wFarm = bot[getBot().name:upper()].wFarm
 idFarm = bot[getBot().name:upper()].idFarm
 webhook = bot[getBot().name:upper()].webhook
 messageid = bot[getBot().name:upper()].messageid
-indexbot = 0
 indexx = 1
 e = 200
 
@@ -169,24 +168,33 @@ function warp(world,id)
         sleep(1000)
     end
     if door and getBot().world == string.upper(world) then
-		local enter = 0
-        while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 and not nuked do
+        local enter = 0
+        if getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 and not nuked then
+            repeat
             sendPacket("action|join_request\nname|" ..bz.."\ninvitedWorld|0", 3)
             sleep(setting.delay.warp)
-			if enter >= 5 then
+            if enter >= 5 then
 				print("Wrong door id, terminated script")
+                sleep(e)
+                infokand(setting.webhook.nuked,"```Wrong door id, terminated script``` @everyone")
+                sleep(e)
 				error()
 			else
 				enter = enter + 1
 			end
+            until getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg ~= 6
         end
     end
 end
 
 function plant(bz)
 	if mode == "up" then
-		for y = 1,53 do
-			for x = 1,99 do
+		t1 = 99
+		t2 = 0
+		t3 = -1
+		tiles = 0
+		for y = -1, 53 do
+			for x = t1, t2, t3 do
 				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then 
 					if setting.mode.splice then
 						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
@@ -206,24 +214,44 @@ function plant(bz)
 						end
 					end 
 					findPath(x,y)
+					door = idFarm
 					while getTile(x,y).fg ~= setting.seed do
 						place(setting.seed,0,0)
 						sleep(setting.delay.plant)
-						reconnect(bz,idFarm,x,y)
+						reconnect(bz,door,x,y)
 					end
 					if setting.mode.splice then
 						while getTile(x,y).fg == setting.seed do
 							place(setting.mode.seed,0,0)
 							sleep(setting.delay.plant)
-							reconnect(bz,idFarm,x,y)
+							reconnect(bz,door,x,y)
 						end
 					end
 				end
 			end
+			if tiles == 1 then
+				if t1 == 0 then
+					t1 = 99
+					t2 = 0
+					t3 = -1
+					tiles = 0
+				elseif t1 == 99 then
+					t1 = 0
+					t2 = 99
+					t3 = 1
+					tiles = 0
+				end
+			elseif tiles == 0 then
+				tiles = tiles + 1
+			end
 		end
 	elseif mode == "down" then
+		t1 = 99
+		t2 = 0
+		t3 = -1
+		tiles = 0
 		for y = 53, 0, -1 do
-			for x = 99, 0, -1 do
+			for x = t1, t2, t3 do
 				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then 
 					if setting.mode.splice then
 						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
@@ -243,19 +271,35 @@ function plant(bz)
 						end
 					end 
 					findPath(x,y)
+					door = idFarm
 					while getTile(x,y).fg ~= setting.seed do
 						place(setting.seed,0,0)
 						sleep(setting.delay.plant)
-						reconnect(bz,idFarm,x,y)
+						reconnect(bz,door,x,y)
 					end
 					if setting.mode.splice then
 						while getTile(x,y).fg == setting.seed do
 							place(setting.mode.seed,0,0)
 							sleep(setting.delay.plant)
-							reconnect(bz,idFarm,x,y)
+							reconnect(bz,door,x,y)
 						end
 					end
 				end
+			end
+			if tiles == 1 then
+				if t1 == 0 then
+					t1 = 99
+					t2 = 0
+					t3 = -1
+					tiles = 0
+				elseif t1 == 99 then
+					t1 = 0
+					t2 = 99
+					t3 = 1
+					tiles = 0
+				end
+			elseif tiles == 0 then
+				tiles = tiles + 1
 			end
 		end
 	end
@@ -363,6 +407,7 @@ if BizzantiuM.version == "1.0" and BizzantiuM.maker == "akbarsht" then
 		plant(worlds)
 	end
 end
+print("ALREADY FINISHED ALL FARM ! Removing BOT")
 infokand(setting.webhook.status,"```ALREADY FINISHED ALL FARM ! Removing BOT``` @everyone")
 webcuy("```ALREADY FINISHED ALL FARM ! Removing BOT``` @everyone",webhook,messageid)
 sleep(e)
@@ -370,5 +415,4 @@ if setting.removeBot then
 	removeBot(getBot().name)
 	sleep(e)
 end
-print("ALREADY FINISHED ALL FARM ! Removing BOT")
 error()
