@@ -1,10 +1,33 @@
+function scanItem()
+    local count = {}
+    for _,obj in pairs(getObjects()) do
+        if count[obj.id] then
+            count[obj.id].count = count[obj.id].count + obj.count
+        else
+            count[obj.id] = {id = obj.id, count = obj.count}
+        end
+    end
+    local str = ''
+    for _,string in pairs(count) do
+        str = str..'\n'..itemInfo(string.id).name..' : '..string.count..'x'
+    end
+    return str
+end
+
 mode = bot[getBot().name:upper()].mode
+startfrom = bot[getBot().name:upper()].startfrom
+slot = bot[getBot().name:upper()].slot
 wFarm = bot[getBot().name:upper()].wFarm
 idFarm = bot[getBot().name:upper()].idFarm
 webhook = bot[getBot().name:upper()].webhook
 messageid = bot[getBot().name:upper()].messageid
-indexx = 1
 e = 200
+wfarmlist = {}
+seedd = 1
+wirz = {}
+bjirz = {}
+bajigur = ""
+bjir = ""
 
 function infokand(id,content)
     text = [[
@@ -20,8 +43,18 @@ function infokand(id,content)
     file:close()
 end
 
+function wirrcuy()
+    bajigur = ""
+	for i = 1, #wFarm do
+		bajigur = bajigur.."\n||"..string.upper(wFarm[i]).."|| : ["..(wirz[wFarm[i]] or "?").."]"
+	end
+	return bajigur
+end
+
 function webcuy(info,id,link)
 	if setting.webhook.access then
+		bar = os.time()
+		bz = os.time() - bar
 	    local script = [[
     	    $webHookUrl = "]]..id..[[/messages/]]..link..[["
         	$cpu = (Get-WmiObject win32_processor | Measure-Object -property LoadPercentage -Average | Select Average).Average
@@ -30,22 +63,22 @@ function webcuy(info,id,link)
         	    url = "https://cdn.discordapp.com/attachments/1122342991705673840/1128335180789207040/1689081173833.jpg"
         	}
         	$footerObject = @{
-        	    text = "]].."Script made by BizzantiuM's | "..(os.date"%d/%m/%y":upper().." Time : ")..os.date("%I")..":"..os.date("%M").." "..os.date("%p"):upper()..[["
+                text = "]].."Developed by BizzantiuM's\nLast updated : "..(os.date"%d/%m/%y":upper().." at ")..os.date("%I")..":"..os.date("%M").." "..os.date("%p"):upper()..""..[["
         	}
-        	$fieldArray = @(
-				@{
-        	        name = "<:gtSB:1088930275871952957> | BOT TASK :"
-        	        value = "**]]..info..[[** <:bot5:1122562392589611110>"
-        	        inline = "false"
-        	    }
+    	    $fieldArray = @(
+        	    @{
+            	    name = "WORLD ESTIMATE"
+                	value = "]]..wirrcuy()..[["
+	                inline = "false"
+    	        }
         	)
         	$embedObject = @{
-        	    title = "<:DumbBuilder:1094476784860397589> **AUTO PLANT v1.8** <:DumbBuilder:1094476784860397589>"
+        	    title = "AUTO PLANT v1.2"
         	    color = "]]..math.random(1111111,9999999)..[["
         	    thumbnail = $thumbnailObject
         	    footer = $footerObject
         	    fields = $fieldArray
-        	    description = "]].."<:gpicks:909335456175497226> **BOT INFO :**\n<:gtBot:1068921740065001624> | NAME : ||"..getBot().name.."||\n<:globe:908316136192475197> | WORLD : ||"..getBot().world.."||\n<:Scroll:1083965766187110460> | LEVEL : "..getBot().level.."\n<:Moderator:974278398916591667> | STATUS : "..getBot().status.."\n"..[["
+        	    description = "]].."```TASK``` [```"..info.."```]\n```NAME``` : [||"..getBot().name.."||][```" ..slot.. "```]\n```WORLD``` : [||"..getBot().world.."||]\n```LEVEL``` : ["..getBot().level.."]\n```STATUS``` : ["..getBot().status.."]\n```PING``` : ["..getPing().."]\n```WORLD``` : [ "..startfrom.." ] / [ "..#wFarm.." ]\n```RUNNING``` : [```"..alamak(os.difftime(os.time(),st)).."```]"..[["
         	}
         	$embedArray = @($embedObject)
         	$payload = @{
@@ -74,12 +107,12 @@ function webpack(id,link)
             	url = "https://cdn.discordapp.com/attachments/1122342991705673840/1128335180789207040/1689081173833.jpg"
 	        }
     	    $footerObject = @{
-        	    text = "]].."Script made by BizzantiuM's | "..(os.date"%d/%m/%y":upper().." Time : ")..os.date("%I")..":"..os.date("%M").." "..os.date("%p"):upper()..[["
+                text = "]].."Developed by BizzantiuM's\nLast updated : "..(os.date"%d/%m/%y":upper().." at ")..os.date("%I")..":"..os.date("%M").." "..os.date("%p"):upper()..""..[["
 	        }
     	    $fieldArray = @(
         	    @{
-            	    name = "<:gscan:1083907585607995463> | STORAGE WORLD"
-                	value = "]]..scanItem()..[["
+            	    name = "STORAGE WORLD [PLANT v1.2]"
+                	value = "]].."```WORLD``` : [||"..getBot().world.."||]\n"..scanItem()..""..[["
 	                inline = "false"
     	        }
         	)
@@ -133,20 +166,9 @@ function reconnect(world,id,x,y)
     end
 end
 
-function splitt(str, ptr)
-    if not ptr then 
-        ptr = "%s"
-    end
-    local tbl = {}
-    for string in string.gmatch(str, ptr) do
-        table.insert(tbl, string) 
-    end
-    return tbl
-end
-
 function warp(world,id)
     nuked = false
-    join = 0
+	join = 0
     bz = world
     if door then
         bz = bz .. "|" .. door
@@ -158,7 +180,7 @@ function warp(world,id)
             if join == 50 then
                 print("World after : "..getBot().world.." is inacessible!, skipped world")
                 sleep(e)
-                infokand(setting.webhook.nuked,"```World after : "..getBot().world.." is inacessible !``` @everyone")
+                infokand(setting.webhook.nuked,"```World after : "..getBot().world.." is inacessible``` @everyone")
                 sleep(e)
                 nuked = true
             else
@@ -202,7 +224,7 @@ function plant(bz)
 							door = idFarm
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting",webhook,messageid)
+							webcuy("Planting mode "..mode.."",webhook,messageid)
 						end
 					else
 						if findItem(setting.seed) == 0 then
@@ -210,9 +232,9 @@ function plant(bz)
 							door = idFarm
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting",webhook,messageid)
+							webcuy("Planting mode "..mode.."",webhook,messageid)
 						end
-					end 
+					end
 					findPath(x,y)
 					door = idFarm
 					while getTile(x,y).fg ~= setting.seed do
@@ -259,7 +281,7 @@ function plant(bz)
 							door = idFarm
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting",webhook,messageid)
+							webcuy("Planting mode "..mode.."",webhook,messageid)
 						end
 					else
 						if findItem(setting.seed) == 0 then
@@ -267,7 +289,7 @@ function plant(bz)
 							door = idFarm
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting",webhook,messageid)
+							webcuy("Planting mode "..mode.."",webhook,messageid)
 						end
 					end 
 					findPath(x,y)
@@ -305,22 +327,6 @@ function plant(bz)
 	end
 end
 
-function scanItem()
-    local count = {}
-    for _,obj in pairs(getObjects()) do
-        if count[obj.id] then
-            count[obj.id].count = count[obj.id].count + obj.count
-        else
-            count[obj.id] = {id = obj.id, count = obj.count}
-        end
-    end
-    local str = ""
-    for _,string in pairs(count) do
-        str = str.."\n"..itemInfo(string.id).name.." : "..string.count.." x"
-    end
-    return str
-end
-
 function gscan(id)
 	count = 0
 	for _, obj in pairs(getObjects()) do
@@ -333,83 +339,104 @@ end
 
 barr = {setting.seed,setting.mode.seed}
 function take(bz)
-    world = splitt(setting.storage[indexx].name, "[^:]+")[1]
-    door = splitt(setting.storage[indexx].name, "[^:]+")[2]
-	setJob("Take seed")
-	sleep(e)
-	warp(world,door)
-	sleep(e)
-	webcuy("```Taking Seed```",webhook,messageid)
-	if setting.mode.splice then
-		if gscan(setting.seed) == 0 or gscan(setting.mode.seed) == 0 then
-			webcuy("```Seed at storage is empty, removing bot !``` @everyone",webhook,messageid)
-			sleep(e)
-			print("Seed at storage is empty, removing bot !")
-			sleep(e)
-			infokand(setting.webhook.status,"```ALREADY FINISHED ALL FARM ! Removing BOT``` @everyone")
-			if setting.removeBot then
-				removeBot(getBot().name)
-				sleep(e)
-			end
-			error()
-		end
-		for _, list in pairs(barr) do
-			for _, object in pairs(getObjects()) do
-				if object.id == list then
-					findPath(round((object.x)/32), math.floor((object.y)/32))
-					sleep(e)
-					collect(2)
-					sleep(e*3)
+    for i = seedd , #setting.storage.world do
+        setJob('Take seed')
+        door = setting.storage.id
+        warp(setting.storage.world[i],door)
+        webcuy('Take seeds',webhook,messageid)
+		if setting.mode.splice then
+			if gscan(setting.seed) == 0 or gscan(setting.mode.seed) == 0 then
+				infokand(setting.webhook.status,"```"..getBot().world.." is empty, skipped world``` @everyone")
+				seedd = seedd + 1
+				if seedd > #setting.storage.world then
+					infokand(setting.webhook.status,"```ALL STORAGE IS EMPTY !!!``` @everyone")
+					if setting.removeBot then
+						removeBot(getBot().name)
+						sleep(e)
+					end
+					error()
 				end
-				if findItem(list) > 0 then
-					break
+			else
+				for _, list in pairs(barr) do
+					for _, object in pairs(getObjects()) do
+						if object.id == list then
+							findPath(round((object.x)/32), math.floor((object.y)/32))
+							sleep(e)
+							collect(2)
+							sleep(e*3)
+						end
+						if findItem(list) > 0 then
+							break
+						end
+					end
 				end
+				sleep(100)
+				break
+			end
+		else
+			if gscan(setting.seed) == 0 then
+				infokand(setting.webhook.status,"```"..getBot().world.." is empty, skipped world``` @everyone")
+				seedd = seedd + 1
+				if seedd > #setting.storage.world then
+					infokand(setting.webhook.status,"```ALL STORAGE IS EMPTY !!!``` @everyone")
+					if setting.removeBot then
+						removeBot(getBot().name)
+						sleep(e)
+					end
+					error()
+				end
+			else
+				for _, object in pairs(getObjects()) do
+					if object.id == setting.seed then
+						findPath(round((object.x)/32), math.floor((object.y)/32))
+						sleep(e)
+						collect(2)
+						sleep(e*3)
+					end
+					if findItem(setting.seed) > 0 then
+						break
+					end
+				end
+				sleep(100)
+				break
 			end
 		end
-	else
-		if gscan(setting.seed) == 0 then
-			webcuy("```Seed at storage is empty, removing bot !``` @everyone",webhook,messageid)
-			sleep(e)
-			print("Seed at storage is empty, removing bot !")
-			sleep(e)
-			infokand(setting.webhook.status,"```ALREADY FINISHED ALL FARM ! Removing BOT``` @everyone")
-			if setting.removeBot then
-				removeBot(getBot().name)
-				sleep(e)
-			end
-			error()
-		end
-		for _, object in pairs(getObjects()) do
-    	    if object.id == setting.seed then
-        	    findPath(round((object.x)/32), math.floor((object.y)/32))
-        		sleep(e)
-            	collect(2)
-				sleep(e*3)
-        	end
-    		if findItem(setting.seed) > 0 then
-        		break
-			end
-        end
-    end
+	end
 	webpack(setting.webhook.storage.link,setting.webhook.storage.messageid)
-	sleep(e)
 	setJob("Planting")
 end
 
-if BizzantiuM.version == "1.0" and BizzantiuM.maker == "akbarsht" then
-	for i, worlds in ipairs(wFarm) do
+st = os.time()
+function alamak(secs)
+	local seconds = tonumber(secs)
+	if seconds <= 0 then
+	  	return "00:00:00";
+	else
+	  	h = string.format("%02.f", math.floor(secs/3600));
+		m = string.format("%02.f", math.floor(secs/60 - (h*60)));
+	  	s = string.format("%02.f", math.floor(secs - h*3600 - m *60));
+	  	return "HOURS : "..h..", MINUTES : "..m..", SECONDS :"..s
+	end
+end
+
+if BizzantiuM.version == "1.2" and BizzantiuM.maker == "akbarsht" then
+	for i =  startfrom, #wFarm do
 		door = idFarm
 		setJob("Planting")
 		sleep(e)
-		warp(worlds,door)
-		sleep(e)
-		webcuy("Planting",webhook,messageid)
-		plant(worlds)
+		warp(wFarm[i],door)
+		if not nuked then
+			webcuy("Planting mode "..mode.."",webhook,messageid)
+			plant(wFarm[i])
+			wirz[wFarm[i]] = "```"..alamak(os.difftime(os.time(),st)).."```"
+		else
+			wirz[wFarm[i]] = 'NUKED'
+		end
 	end
 end
 print("ALREADY FINISHED ALL FARM ! Removing BOT")
 infokand(setting.webhook.status,"```ALREADY FINISHED ALL FARM ! Removing BOT``` @everyone")
-webcuy("```ALREADY FINISHED ALL FARM ! Removing BOT``` @everyone",webhook,messageid)
+webcuy("ALREADY FINISHED ALL FARM ! Removing BOT",webhook,messageid)
 sleep(e)
 if setting.removeBot then
 	removeBot(getBot().name)
