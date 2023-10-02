@@ -1,143 +1,104 @@
-function scanItem()
-    local count = {}
-    for _,obj in pairs(getObjects()) do
-        if count[obj.id] then
-            count[obj.id].count = count[obj.id].count + obj.count
-        else
-            count[obj.id] = {id = obj.id, count = obj.count}
-        end
-    end
-    local str = ''
-    for _,string in pairs(count) do
-        str = str..'\n'..itemInfo(string.id).name..' : '..string.count..'x'
-    end
-    return str
-end
-
 mode = bot[getBot().name:upper()].mode
 startfrom = bot[getBot().name:upper()].startfrom
 slot = bot[getBot().name:upper()].slot
-wFarm = bot[getBot().name:upper()].wFarm
-idFarm = bot[getBot().name:upper()].idFarm
-webhook = bot[getBot().name:upper()].webhook
-messageid = bot[getBot().name:upper()].messageid
+farmList = bot[getBot().name:upper()].farmList
+idList = bot[getBot().name:upper()].idList
+webhook = bot[getBot().name:upper()].webhooktask.link
+message = bot[getBot().name:upper()].webhooktask.messageid
 e = 200
-wfarmlist = {}
+local iTile = 0
+local xTile = 0
 seedd = 1
 wirz = {}
-bjirz = {}
 bajigur = ""
 bjir = ""
 
-function infokand(id,content)
-    text = [[
-        $webHookUrl = "]]..id..[["
-        $payload = @{
-            content = "]]..content..[["
-        }
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Post -ContentType 'application/json'
-    ]]
-    local file = io.popen("powershell -command -", "w")
-    file:write(text)
-    file:close()
+function infokand(content)
+	if setting.webhook.access then
+		text = [[
+			$webHookUrl = "]]..setting.webhook.status..[["
+			$payload = @{
+				content = "]]..content..[["
+			}
+			[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+			Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Post -ContentType 'application/json'
+		]]
+		local file = io.popen("powershell -command -", "w")
+		file:write(text)
+		file:close()
+	end
 end
 
 function wirrcuy()
     bajigur = ""
-	for i = 1, #wFarm do
-		bajigur = bajigur.."\n||"..string.upper(wFarm[i]).."|| : ["..(wirz[wFarm[i]] or "?").."]"
+	for i = 1, #farmList do
+		bajigur = bajigur.."\n||"..string.upper(farmList[i]).."|| : ["..(wirz[farmList[i]] or "?").."]"
 	end
 	return bajigur
 end
 
-function webcuy(info,id,link)
+function wirrzz()
+    bajigur = ""
+	for i = 1, #setting.storage.world do
+		bajigur = bajigur.."\n||"..string.upper(setting.storage.world[i]).."|| "..(wirz[setting.storage.world[i]] or "?")..""
+    end
+    return bajigur
+end
+
+function webcuy(info)
 	if setting.webhook.access then
-		bar = os.time()
-		bz = os.time() - bar
-	    local script = [[
-    	    $webHookUrl = "]]..id..[[/messages/]]..link..[["
-        	$cpu = (Get-WmiObject win32_processor | Measure-Object -property LoadPercentage -Average | Select Average).Average
-        	$ram = (Get-Counter '\Memory\Available MBytes').CounterSamples.CookedValue
-			$thumbnailObject = @{
-        	    url = "https://cdn.discordapp.com/attachments/1122342991705673840/1128335180789207040/1689081173833.jpg"
-        	}
-        	$footerObject = @{
-                text = "]].."Developed by BizzantiuM's\nLast updated : "..(os.date"%d/%m/%y":upper().." at ")..os.date("%I")..":"..os.date("%M").." "..os.date("%p"):upper()..""..[["
-        	}
-    	    $fieldArray = @(
-        	    @{
-            	    name = "WORLD ESTIMATE"
-                	value = "]]..wirrcuy()..[["
-	                inline = "false"
-    	        }
-        	)
-        	$embedObject = @{
-        	    title = "AUTO PLANT v1.2"
-        	    color = "]]..math.random(1111111,9999999)..[["
-        	    thumbnail = $thumbnailObject
-        	    footer = $footerObject
-        	    fields = $fieldArray
-        	    description = "]].."```TASK``` [```"..info.."```]\n```NAME``` : [||"..getBot().name.."||][```" ..slot.. "```]\n```WORLD``` : [||"..getBot().world.."||]\n```LEVEL``` : ["..getBot().level.."]\n```STATUS``` : ["..getBot().status.."]\n```PING``` : ["..getPing().."]\n```WORLD``` : [ "..startfrom.." ] / [ "..#wFarm.." ]\n```RUNNING``` : [```"..alamak(os.difftime(os.time(),st)).."```]"..[["
-        	}
-        	$embedArray = @($embedObject)
-        	$payload = @{
-        	    embeds = $embedArray
-        	}
-        	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        	Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Patch -ContentType 'application/json'
-    	]]
-    	local pipe = io.popen("powershell -command -", "w")
-    	pipe:write(script)
-    	pipe:close()
-	end
+        local text = [[
+            $webHookUrl = "]]..webhook..[[/messages/]]..message..[["
+            $payload = @{
+                username = "BizzantiuM's"
+                embeds = @(
+                    @{
+                        title = "AUTO PLANT v1.3"
+                        color = "]]..math.random(111111,999999)..[["
+                        fields = @(
+                            @{
+                                name = ""
+                                value = "]].."```RUNNING``` : [ ```"..alamak(os.difftime(os.time(),st)).."``` ]"..[["
+                                inline = "false"
+                            }
+                            @{
+                                name = "BOT INFO"
+                                value = "]].."```TASK``` [```"..info.."```]\n```NAME``` : [||"..getBot().name.."||][```" ..slot.. "```]\n```WORLD``` : [||"..getBot().world.."||]\n```LEVEL``` : ["..getBot().level.."]\n```STATUS``` : ["..string.upper(getBot().status).."]\n```PING``` : ["..getPing().."]\n```TOTAL``` : [ "..startfrom.." ] / [ "..#farmList.." ]"..[["
+                                inline = "false"
+                            }
+                            @{
+                                name = "STORAGE"
+                                value = "]]..wirrzz()..[["
+                                inline = "true"
+                            }
+                            @{
+                                name = "WORLD STATIC"
+                                value = "]]..wirrcuy()..[["
+                                inline = "true"
+                            }
+                        )
+                        footer = @{
+                            text = "Developed by BizzantiuM's`nLast updated : ]]..(os.date"%d/%m/%y":upper().." at ")..os.date("%I")..":"..os.date("%M").." "..os.date("%p"):upper()..[["
+                        }
+                    }
+                )
+            }
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Patch -ContentType 'application/json'
+        ]]
+        local pipe = io.popen("powershell -command -", "w")
+        pipe:write(text)
+        pipe:close()
+    end
 end
 
 function round(n)
     return n % 1 > 0.5 and math.ceil(n) or math.floor(n)
 end
 
-function webpack(id,link)
-	if setting.webhook.access then
-	    local script = [[
-    	    $webHookUrl = "]]..id..[[/messages/]]..link..[["
-	        $cpu = (Get-WmiObject win32_processor | Measure-Object -property LoadPercentage -Average | Select Average).Average
-    	    $ram = (Get-Counter '\Memory\Available MBytes').CounterSamples.CookedValue
-			$thumbnailObject = @{
-            	url = "https://cdn.discordapp.com/attachments/1122342991705673840/1128335180789207040/1689081173833.jpg"
-	        }
-    	    $footerObject = @{
-                text = "]].."Developed by BizzantiuM's\nLast updated : "..(os.date"%d/%m/%y":upper().." at ")..os.date("%I")..":"..os.date("%M").." "..os.date("%p"):upper()..""..[["
-	        }
-    	    $fieldArray = @(
-        	    @{
-            	    name = "STORAGE WORLD [PLANT v1.2]"
-                	value = "]].."```WORLD``` : [||"..getBot().world.."||]\n"..scanItem()..""..[["
-	                inline = "false"
-    	        }
-        	)
-	        $embedObject = @{
-    	        color = "]]..math.random(1111111,9999999)..[["
-        	    thumbnail = $thumbnailObject
-            	footer = $footerObject
-	            fields = $fieldArray
-    	    }
-        	$embedArray = @($embedObject)
-        	$payload = @{
-            	embeds = $embedArray
-        	}
-        	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        	Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Patch -ContentType 'application/json'
-    	]]
-    	local pipe = io.popen("powershell -command -", "w")
-    	pipe:write(script)
-    	pipe:close()
-	end
-end
-
 function reconnect(world,id,x,y)
     if getBot().status ~= "online" then
-        infokand(setting.webhook.status,"```Bot : "..getBot().name.." status is "..getBot().status.." !``` @everyone" )
+        infokand("[ ||"..getBot().name.."|| ] status is "..getBot().status.." ! @everyone")
         sleep(e)
         while getBot().status ~= "online" do
             connect()
@@ -161,55 +122,47 @@ function reconnect(world,id,x,y)
                 sleep(e)
             end
         end
-        infokand(setting.webhook.status,"```Bot : "..getBot().name.." status is "..getBot().status.." !``` @everyone")
+        infokand("[ ||"..getBot().name.."|| ] status is "..getBot().status.." ! @everyone")
         sleep(e)
     end
 end
 
 function warp(world,id)
-    nuked = false
-	join = 0
     bz = world
     if door then
         bz = bz .. "|" .. door
     end
     if getBot().world ~= string.upper(world) then
-        while getBot().world ~= world:upper() and not nuked do
-            sendPacket("action|join_request\nname|"..bz.."\ninvitedWorld|0",3)
-            sleep(setting.delay.warp)
-            if join == 50 then
-                print("World after : "..getBot().world.." is inacessible!, skipped world")
-                sleep(e)
-                infokand(setting.webhook.nuked,"```World after : "..getBot().world.." is inacessible``` @everyone")
-                sleep(e)
-                nuked = true
-            else
-                join = join + 1
+        addHook('onvariant','nuked',function (varlist)
+            if varlist[0] == 'OnConsoleMessage' then
+                if string.find(varlist[1],'inaccessible.') then
+                    nuked = true
+                end
             end
+        end)
+        while getBot().world ~= string.upper(world) and not nuked do
+            sendPacket('action|join_request\nname|'..bz..'\ninvitedWorld|0',3)
+            sleep(setting.delay.warp)
         end
+        removeHooks()
         sleep(1000)
     end
     if door and getBot().world == string.upper(world) then
-        local enter = 0
-        if getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 and not nuked then
-            repeat
-            sendPacket("action|join_request\nname|" ..bz.."\ninvitedWorld|0", 3)
+        local stuck = 0
+        while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 and not wrong do
+            sendPacket("action|join_request\nname|"..world:upper()..'|'..id:upper().."\ninvitedWorld|0",3)
             sleep(setting.delay.warp)
-            if enter >= 5 then
-				print("Wrong door id, terminated script")
-                sleep(e)
-                infokand(setting.webhook.nuked,"```Wrong door id, terminated script``` @everyone")
-                sleep(e)
-				error()
-			else
-				enter = enter + 1
-			end
-            until getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg ~= 6
+            if stuck == 5 then
+                wrong = true
+            else
+                stuck = stuck + 1
+            end
         end
     end
 end
 
 function plant(bz)
+    webcuy("Planting mode : "..string.upper(mode).."")
 	if mode == "up" then
 		t1 = 99
 		t2 = 0
@@ -217,34 +170,40 @@ function plant(bz)
 		tiles = 0
 		for y = -1, 53 do
 			for x = t1, t2, t3 do
-				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then 
+				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
 					if setting.mode.splice then
 						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
 							take(bz)
-							door = idFarm
+							door = idList
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting mode "..mode.."",webhook,messageid)
+							webcuy("Planting mode : "..string.upper(mode).."")
 						end
 					else
 						if findItem(setting.seed) == 0 then
 							take(bz)
-							door = idFarm
+							door = idList
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting mode "..mode.."",webhook,messageid)
+							webcuy("Planting mode : "..string.upper(mode).."")
 						end
 					end
 					findPath(x,y)
-					door = idFarm
-					while getTile(x,y).fg ~= setting.seed do
-						place(setting.seed,0,0)
-						sleep(setting.delay.plant)
-						reconnect(bz,door,x,y)
-					end
+					door = idList
 					if setting.mode.splice then
+						while getTile(x,y).fg ~= setting.seed do
+							place(setting.seed,0,0)
+							sleep(setting.delay.plant)
+							reconnect(bz,door,x,y)
+						end
 						while getTile(x,y).fg == setting.seed do
 							place(setting.mode.seed,0,0)
+							sleep(setting.delay.plant)
+							reconnect(bz,door,x,y)
+						end
+					else
+						if getTile(x,y).fg ~= setting.seed then
+							place(setting.seed,0,0)
 							sleep(setting.delay.plant)
 							reconnect(bz,door,x,y)
 						end
@@ -274,34 +233,40 @@ function plant(bz)
 		tiles = 0
 		for y = 53, 0, -1 do
 			for x = t1, t2, t3 do
-				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then 
+				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
 					if setting.mode.splice then
 						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
 							take(bz)
-							door = idFarm
+							door = idList
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting mode "..mode.."",webhook,messageid)
+							webcuy("Planting mode : "..string.upper(mode).."")
 						end
 					else
 						if findItem(setting.seed) == 0 then
 							take(bz)
-							door = idFarm
+							door = idList
 							warp(bz,door)
 							sleep(e)
-							webcuy("Planting mode "..mode.."",webhook,messageid)
+							webcuy("Planting mode : "..string.upper(mode).."")
 						end
 					end 
 					findPath(x,y)
-					door = idFarm
-					while getTile(x,y).fg ~= setting.seed do
-						place(setting.seed,0,0)
-						sleep(setting.delay.plant)
-						reconnect(bz,door,x,y)
-					end
+					door = idList
 					if setting.mode.splice then
+						while getTile(x,y).fg ~= setting.seed do
+							place(setting.seed,0,0)
+							sleep(setting.delay.plant)
+							reconnect(bz,door,x,y)
+						end
 						while getTile(x,y).fg == setting.seed do
 							place(setting.mode.seed,0,0)
+							sleep(setting.delay.plant)
+							reconnect(bz,door,x,y)
+						end
+					else
+						if getTile(x,y).fg ~= setting.seed then
+							place(setting.seed,0,0)
 							sleep(setting.delay.plant)
 							reconnect(bz,door,x,y)
 						end
@@ -325,6 +290,7 @@ function plant(bz)
 			end
 		end
 	end
+	iTile = 0
 end
 
 function gscan(id)
@@ -337,73 +303,158 @@ function gscan(id)
 	return count
 end
 
+function cektree(bz)
+	webcuy('Rechecking worlds')
+	for i = 1,2 do
+        for _, tile in pairs(getTiles()) do
+			if tile.fg == 0 and getTile(tile.x, tile.y + 1).flags ~= 0 then
+				if setting.mode.splice then
+					if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
+						take(bz)
+						door = idList
+						warp(bz,door)
+						sleep(e)
+						webcuy("Planting mode : "..string.upper(mode).."")
+					end
+				else
+					if findItem(setting.seed) == 0 then
+						take(bz)
+						door = idList
+						warp(bz,door)
+						sleep(e)
+						webcuy("Planting mode : "..string.upper(mode).."")
+					end
+				end 
+				findPath(tile.x,tile.y)
+				door = idList
+				if setting.mode.splice then
+					while getTile(tile.x,tile.y).fg ~= setting.seed do
+						place(setting.seed,0,0)
+						sleep(setting.delay.plant)
+						reconnect(bz,door,tile.x,tile.y)
+					end
+					while getTile(tile.x,tile.y).fg == setting.seed do
+						place(setting.mode.seed,0,0)
+						sleep(setting.delay.plant)
+						reconnect(bz,door,tile.x,tile.y)
+					end
+				else
+					if getTile(tile.x,tile.y).fg ~= setting.seed then
+						place(setting.seed,0,0)
+						sleep(setting.delay.plant)
+						reconnect(bz,door,tile.x,tile.y)
+					end
+				end
+			end
+		end
+	end
+end
+
 barr = {setting.seed,setting.mode.seed}
 function take(bz)
     for i = seedd , #setting.storage.world do
         setJob('Take seed')
+		world = setting.storage.world[i]
         door = setting.storage.id
-        warp(setting.storage.world[i],door)
-        webcuy('Take seeds',webhook,messageid)
-		if setting.mode.splice then
-			if gscan(setting.seed) == 0 or gscan(setting.mode.seed) == 0 then
-				infokand(setting.webhook.status,"```"..getBot().world.." is empty, skipped world``` @everyone")
-				seedd = seedd + 1
-				if seedd > #setting.storage.world then
-					infokand(setting.webhook.status,"```ALL STORAGE IS EMPTY !!!``` @everyone")
-					if setting.removeBot then
-						removeBot(getBot().name)
-						sleep(e)
-					end
-					error()
-				end
-			else
-				for _, list in pairs(barr) do
-					for _, object in pairs(getObjects()) do
-						if object.id == list then
-							findPath(round((object.x)/32), math.floor((object.y)/32))
-							sleep(e)
-							collect(2)
-							sleep(e*3)
+        warp(world,door)
+        webcuy('Take seeds')
+		if not nuked then
+			if not wrong then
+				if setting.mode.splice then
+					if gscan(setting.seed) == 0 or gscan(setting.mode.seed) == 0 then
+						wirz[world] = "[ "..gscan(setting.seed).." / "..gscan(setting.mode.seed).." ] EMPTY !!"
+						infokand("[ ||"..getBot().world.."|| ] is empty, skipped world. @everyone")
+						seedd = seedd + 1
+						if seedd > #setting.storage.world then
+							infokand("All storage is empty!, @everyone")
+							if setting.removeBot then
+								removeBot(getBot().name)
+								sleep(e)
+							end
+							error()
 						end
-						if findItem(list) > 0 then
-							break
+					else
+						for _, list in pairs(barr) do
+							for _, object in pairs(getObjects()) do
+								if object.id == list then
+									findPath(round((object.x)/32), math.floor((object.y)/32))
+									sleep(e)
+									collect(2)
+									sleep(e*3)
+								end
+								if findItem(list) > 0 then
+									break
+								end
+							end
 						end
+						sleep(100)
+						break
 					end
-				end
-				sleep(100)
-				break
-			end
-		else
-			if gscan(setting.seed) == 0 then
-				infokand(setting.webhook.status,"```"..getBot().world.." is empty, skipped world``` @everyone")
-				seedd = seedd + 1
-				if seedd > #setting.storage.world then
-					infokand(setting.webhook.status,"```ALL STORAGE IS EMPTY !!!``` @everyone")
-					if setting.removeBot then
-						removeBot(getBot().name)
-						sleep(e)
-					end
-					error()
-				end
-			else
-				for _, object in pairs(getObjects()) do
-					if object.id == setting.seed then
-						findPath(round((object.x)/32), math.floor((object.y)/32))
-						sleep(e)
-						collect(2)
-						sleep(e*3)
-					end
-					if findItem(setting.seed) > 0 then
+				else
+					if gscan(setting.seed) == 0 then
+						wirz[world] = "[ "..gscan(setting.seed).." / "..gscan(setting.mode.seed).." ] EMPTY !!"
+						infokand("[ ||"..getBot().world.."|| ] is empty, skipped world. @everyone")
+						seedd = seedd + 1
+						if seedd > #setting.storage.world then
+							infokand("All storage is empty!, @everyone")
+							if setting.removeBot then
+								removeBot(getBot().name)
+								sleep(e)
+							end
+							error()
+						end
+					else
+						for _, object in pairs(getObjects()) do
+							if object.id == setting.seed then
+								findPath(round((object.x)/32), math.floor((object.y)/32))
+								sleep(e)
+								collect(2)
+								sleep(e*3)
+							end
+							if findItem(setting.seed) > 0 then
+								break
+							end
+						end
+						sleep(100)
 						break
 					end
 				end
-				sleep(100)
-				break
-			end
-		end
-	end
-	webpack(setting.webhook.storage.link,setting.webhook.storage.messageid)
-	setJob("Planting")
+			else
+                wirz[world] = 'WRONG DOOR ID'
+                wrong = false
+                sleep(1000)
+                print("Id door storage seeds is wrong, check ur id door !!")
+                infokand("Id door storage seeds is wrong, check ur id door !!")
+                seedd = seedd + 1
+                if seedd > #setting.storage.world then
+					print('All storage seeds is empty')
+					infokand("All storage seeds is empty!, @everyone")
+                    if setting.removeBot then
+                        removeBot(getBot().name)
+                        sleep(100)
+                    end
+                    error()
+                end
+            end
+        else
+            wirz[world] = 'NUKED'
+            nuked = false
+            sleep(1000)
+            print("World storage seeds is NUKED!, check ur world !!")
+            infokand("World storage seeds is NUKED!, check ur world !! @everyone")
+            seedd = seedd + 1
+            if seedd > #setting.storage.world then
+                print('All storage seeds is empty')
+                infokand("All storage seeds is empty!, @everyone")
+                if setting.removeBot then
+                    removeBot(getBot().name)
+                    sleep(100)
+                end
+                error()
+            end
+        end
+    end
+	wirz[world] = "[ "..gscan(setting.seed).." / "..gscan(setting.mode.seed).." ]"
 end
 
 st = os.time()
@@ -415,28 +466,41 @@ function alamak(secs)
 	  	h = string.format("%02.f", math.floor(secs/3600));
 		m = string.format("%02.f", math.floor(secs/60 - (h*60)));
 	  	s = string.format("%02.f", math.floor(secs - h*3600 - m *60));
-	  	return "HOURS : "..h..", MINUTES : "..m..", SECONDS :"..s
+	  	return h..":"..m..":"..s
 	end
 end
 
-if BizzantiuM.version == "1.2" and BizzantiuM.maker == "akbarsht" then
-	for i =  startfrom, #wFarm do
-		door = idFarm
+if BizzantiuM.version == "1.3" and BizzantiuM.maker == "akbarsht" then
+	for i =  startfrom, #farmList do
+		door = idList
 		setJob("Planting")
 		sleep(e)
-		warp(wFarm[i],door)
+		warp(farmList[i],door)
+		webcuy("Planting mode "..mode.."")
 		if not nuked then
-			webcuy("Planting mode "..mode.."",webhook,messageid)
-			plant(wFarm[i])
-			wirz[wFarm[i]] = "```"..alamak(os.difftime(os.time(),st)).."```"
-		else
-			wirz[wFarm[i]] = 'NUKED'
-		end
+			if not wrong then
+				plant(farmList[i])
+				cektree(farmList[i])
+				wirz[farmList[i]] = "```"..alamak(os.difftime(os.time(),st)).."```"
+            else
+                wirz[farmList[i]] = 'WRONG DOOR ID'
+                wrong = false
+                sleep(1000)
+                print("[ ||"..farmList[i].."|| ] is wrong door id, skipped world")
+                infokand("[ ||"..farmList[i].."|| ] is wrong door id, skipped world @everyone")
+            end
+        else
+            wirz[farmList[i]] = 'NUKED'
+            nuked = false
+            sleep(1000)
+            print("||"..farmList[i].."|| is NUKED!, check ur world !!")
+            infokand("[ ||"..farmList[i].."|| ] is NUKED!, check ur world !! @everyone")
+        end
 	end
 end
 print("ALREADY FINISHED ALL FARM ! Removing BOT")
-infokand(setting.webhook.status,"```ALREADY FINISHED ALL FARM ! Removing BOT``` @everyone")
-webcuy("ALREADY FINISHED ALL FARM ! Removing BOT",webhook,messageid)
+infokand("[ ||"..getBot().name.."|| ] slot : "..slot.." has already planting all worlds, @everyone")
+webcuy("ALREADY FINISHED ALL FARM ! Removing BOT")
 sleep(e)
 if setting.removeBot then
 	removeBot(getBot().name)
