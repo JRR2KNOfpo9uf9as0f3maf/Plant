@@ -1,23 +1,25 @@
 for i, bot in pairs(getBots()) do
     if getBot().name:upper() == bot.name:upper() then
-        index = i
+        param = i
     end
 end
 
-mode = bot[index].mode
-startfrom = bot[index].startfrom
-slot = bot[index].slot
-farmList = bot[index].farmList
-idList = bot[index].idList
-webhook = bot[index].webhooktask.link
-message = bot[index].webhooktask.messageid
-e = 200
-seedd = 1
-wirz = {}
-bajigur = ""
-bjir = ""
+mode = bot[param].mode
+startfrom = bot[param].startfrom
+slot = bot[param].slot
+farmList = bot[param].farmList
+idList = bot[param].idList
+webhook = bot[param].webhooktask.link
+message = bot[param].webhooktask.messageid
+index = 1
+timer = {}
+infoid = {}
+strings = ""
+local identity = {}
+identity.param = idList
+identity.goodtime = os.time()
 
-function infokand(content)
+identity.botinfo = function(content)
 	if setting.webhook.access then
 		text = [[
 			$webHookUrl = "]]..setting.webhook.status..[["
@@ -25,7 +27,7 @@ function infokand(content)
 				content = "]]..content..[["
 			}
 			[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-			Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Post -ContentType 'application/json'
+			Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Post -ContentType "application/json"
 		]]
 		local file = io.popen("powershell -command -", "w")
 		file:write(text)
@@ -33,23 +35,23 @@ function infokand(content)
 	end
 end
 
-function wirrcuy()
-    bajigur = ""
+identity.farmname = function()
+    strings = ""
 	for i = 1, #farmList do
-		bajigur = bajigur.."\n||"..string.upper(farmList[i]).."|| : ["..(wirz[farmList[i]] or "?").."]"
+		strings = strings.."\n||"..string.upper(farmList[i]).."|| : "..(timer[farmList[i]] or "?")..""
 	end
-	return bajigur
+	return strings
 end
 
-function wirrzz()
-    bajigur = ""
+identity.storagename = function()
+    strings = ""
 	for i = 1, #setting.storage.world do
-		bajigur = bajigur.."\n||"..string.upper(setting.storage.world[i]).."|| "..(wirz[setting.storage.world[i]] or "?")..""
+		strings = strings.."\n||"..string.upper(setting.storage.world[i]).."|| "..(infoid[setting.storage.world[i]] or "?")..""
     end
-    return bajigur
+    return strings
 end
 
-function webcuy(info)
+identity.webhookinfo = function(info)
 	if setting.webhook.access then
         local text = [[
             $webHookUrl = "]]..webhook..[[/messages/]]..message..[["
@@ -57,28 +59,28 @@ function webcuy(info)
                 username = "BizzantiuM's"
                 embeds = @(
                     @{
-                        title = "AUTO PLANT v1.3"
+                        title = "AUTO PLANT v1.0"
                         color = "]]..math.random(111111,999999)..[["
                         fields = @(
                             @{
                                 name = ""
-                                value = "]].."```RUNNING``` : [ ```"..alamak(os.difftime(os.time(),st)).."``` ]"..[["
+                                value = "]].."RUNNING : [ "..identity.goodtimes(os.difftime(os.time(),identity.goodtime)).." ]"..[["
                                 inline = "false"
                             }
                             @{
-                                name = "BOT INFO"
-                                value = "]].."```TASK``` [```"..info.."```]\n```NAME``` : [||"..getBot().name.."||][```" ..slot.. "```]\n```WORLD``` : [||"..getBot().world.."||]\n```LEVEL``` : ["..getBot().level.."]\n```STATUS``` : ["..string.upper(getBot().status).."]\n```PING``` : ["..getPing().."]\n```TOTAL``` : [ "..startfrom.." ] / [ "..#farmList.." ]"..[["
-                                inline = "false"
+                                name = "BOT INFO [ ]]..slot..[[ ]"
+                                value = "]].."TASK [ "..info.." ]\nNAME : [ ||"..getBot().name.."|| ]\nWORLD : [ ||"..getBot().world.."|| ]\nLEVEL : [ "..getBot().level.." ]\nSTATUS : [ "..string.upper(getBot().status).." ]"..[["
+                                inline = "true"
                             }
                             @{
-                                name = "STORAGE"
-                                value = "]]..wirrzz()..[["
+                                name = "STORAGE STATIC"
+                                value = "]]..identity.storagename()..[["
                                 inline = "true"
                             }
                             @{
                                 name = "WORLD STATIC"
-                                value = "]]..wirrcuy()..[["
-                                inline = "true"
+                                value = "]]..identity.farmname()..[["
+                                inline = "false"
                             }
                         )
                         footer = @{
@@ -96,24 +98,22 @@ function webcuy(info)
     end
 end
 
-function round(n)
+identity.round = function(n)
     return n % 1 > 0.5 and math.ceil(n) or math.floor(n)
 end
 
-function reconnect(world,id,x,y)
+identity.reconnect = function(world,id,x,y)
     if getBot().world == "EXIT" then 
-        infokand("[ ||"..getBot().name.."|| ] stuck EXIT ??, trying to join world again !! @everyone")
-        sleep(100)
+        identity.botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." stuck EXIT ??, trying to joining world again @everyone")
+        print("[ "..getBot().name.." ] slot : "..slot.." stuck EXIT ??, trying to joining world again")
         while getBot().world ~= world:upper() do
             sendPacket("action|join_request\nname|"..world:upper().."\ninvitedWorld|0",3)
             sleep(setting.delay.warp)
         end
         if id ~= "" then
-            if getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 then
-                repeat
+            while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 do
                 sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
                 sleep(setting.delay.warp)
-                until getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg ~= 6
             end
         end
         if x and y then
@@ -122,223 +122,96 @@ function reconnect(world,id,x,y)
                 sleep(100)
             end
         end
-        infokand("[ ||"..getBot().name.."|| ] success to joining world !! @everyone")
-        sleep(100)
+        identity.botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." success to joining world @everyone")
+        print("[ "..getBot().name.." ] slot : "..slot.." success to joining world")
     end
-    if getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 then
-        infokand("Got killed by foreigners??")
-        sleep(100)
-        repeat
-            sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
-            sleep(setting.delay.warp)
-        until getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg ~= 6
+    while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 do
+        identity.botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." back to white door, what happened?! trying back to position")
+        print("[ "..getBot().name.." ] slot : "..slot.." back to white door, what happened?! trying back to position")
+        sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
+        sleep(setting.delay.warp)
         if x and y then
             while math.floor(getBot().x / 32) ~= x or math.floor(getBot().y / 32) ~= y do
                 findPath(x,y)
                 sleep(100)
             end
         end
-        infokand("Bot already back to pos")
-        sleep(100)
+        identity.botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." already back to position")
+        print("[ "..getBot().name.." ] slot : "..slot.." already back to position")
     end
     if getBot().status ~= "online" then
-        infokand("[ ||"..getBot().name.."|| ] status is "..getBot().status.." ! @everyone")
-        sleep(e)
+        identity.botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." status is "..getBot().status.." @everyone")
+        print("[ "..getBot().name.." ] slot : "..slot.." status is "..getBot().status.."")
         while getBot().status ~= "online" do
             connect()
             sleep(setting.delay.reconnect)
+            if getBot().status == "suspended" or getBot().status == "banned" or getBot().status == "ercon" then
+                botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." status is "..getBot().status..", removing bot @everyone")
+                print("[ "..getBot().name.." ] slot : "..slot.." status is "..getBot().status..", removing bot")
+                if setting.removeBot then
+                    removeBot(getBot().name)
+                    sleep(100)
+                end
+                error()
+            end
         end
         while getBot().world ~= world:upper() do
             sendPacket("action|join_request\nname|"..world:upper().."\ninvitedWorld|0",3)
             sleep(setting.delay.warp)
         end
         if id ~= "" then
-            if getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 then
-                repeat
-				sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
-				sleep(setting.delay.warp)
-				until getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg ~= 6
+            while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 do
+                sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
+                sleep(setting.delay.warp)
             end
         end
         if x and y then
             while math.floor(getBot().x / 32) ~= x or math.floor(getBot().y / 32) ~= y do
                 findPath(x,y)
-                sleep(e)
+                sleep(150)
             end
         end
-        infokand("[ ||"..getBot().name.."|| ] status is "..getBot().status.." ! @everyone")
-        sleep(e)
+        identity.botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." status is "..getBot().status.." @everyone")
+        print("[ "..getBot().name.." ] slot : "..slot.." status is "..getBot().status.."")
     end
 end
 
-function warp(world,id)
-    bz = world
-    if door then
-        bz = bz .. "|" .. door
+identity.warp = function(world,door)
+    name = world
+    door = identity.door
+    if identity.door then
+        name = name .. "|" ..identity.door
     end
     if getBot().world ~= string.upper(world) then
-        addHook('onvariant','nuked',function (varlist)
-            if varlist[0] == 'OnConsoleMessage' then
-                if string.find(varlist[1],'inaccessible.') then
+        addHook("onvariant","nuked",function (varlist)
+            if varlist[0] == "OnConsoleMessage" then
+                if string.find(varlist[1],"inaccessible.") then
                     nuked = true
                 end
             end
         end)
         while getBot().world ~= string.upper(world) and not nuked do
-            sendPacket('action|join_request\nname|'..bz..'\ninvitedWorld|0',3)
+            sendPacket("action|join_request\nname|"..name.."\ninvitedWorld|0",3)
             sleep(setting.delay.warp)
         end
         removeHooks()
         sleep(1000)
     end
-    if door and getBot().world == string.upper(world) then
+    if identity.door and getBot().world == string.upper(world) then
         local stuck = 0
         while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 and not wrong do
-            sendPacket("action|join_request\nname|"..world:upper()..'|'..id:upper().."\ninvitedWorld|0",3)
+            sendPacket("action|join_request\nname|"..name.."\ninvitedWorld|0",3)
             sleep(setting.delay.warp)
+            stuck = stuck + 1
             if stuck == 5 then
                 wrong = true
-            else
-                stuck = stuck + 1
             end
         end
     end
 end
 
-function plant(bz)
-    webcuy("Planting mode : "..string.upper(mode).."")
-	if mode == "up" then
-		t1 = 99
-		t2 = 0
-		t3 = -1
-		tiles = 0
-		for y = -1, 53 do
-			for x = t1, t2, t3 do
-				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
-					if setting.mode.splice then
-						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
-							take(bz)
-							door = idList
-							warp(bz,door)
-							sleep(e)
-							webcuy("Planting mode : "..string.upper(mode).."")
-						end
-					else
-						if findItem(setting.seed) == 0 then
-							take(bz)
-							door = idList
-							warp(bz,door)
-							sleep(e)
-							webcuy("Planting mode : "..string.upper(mode).."")
-						end
-					end
-					findPath(x,y)
-					door = idList
-					if setting.mode.splice then
-						while getTile(x,y).fg ~= setting.seed do
-							place(setting.seed,0,0)
-							sleep(setting.delay.plant)
-							reconnect(bz,door,x,y)
-						end
-						while getTile(x,y).fg == setting.seed do
-							place(setting.mode.seed,0,0)
-							sleep(setting.delay.plant)
-							reconnect(bz,door,x,y)
-						end
-					else
-						if getTile(x,y).fg ~= setting.seed then
-							place(setting.seed,0,0)
-							sleep(setting.delay.plant)
-							reconnect(bz,door,x,y)
-						end
-					end
-				end
-			end
-			if tiles == 1 then
-				if t1 == 0 then
-					t1 = 99
-					t2 = 0
-					t3 = -1
-					tiles = 0
-				elseif t1 == 99 then
-					t1 = 0
-					t2 = 99
-					t3 = 1
-					tiles = 0
-				end
-			elseif tiles == 0 then
-				tiles = tiles + 1
-			end
-		end
-	elseif mode == "down" then
-		t1 = 99
-		t2 = 0
-		t3 = -1
-		tiles = 0
-		for y = 53, 0, -1 do
-			for x = t1, t2, t3 do
-				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
-					if setting.mode.splice then
-						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
-							take(bz)
-							door = idList
-							warp(bz,door)
-							sleep(e)
-							webcuy("Planting mode : "..string.upper(mode).."")
-						end
-					else
-						if findItem(setting.seed) == 0 then
-							take(bz)
-							door = idList
-							warp(bz,door)
-							sleep(e)
-							webcuy("Planting mode : "..string.upper(mode).."")
-						end
-					end 
-					findPath(x,y)
-					door = idList
-					if setting.mode.splice then
-						while getTile(x,y).fg ~= setting.seed do
-							place(setting.seed,0,0)
-							sleep(setting.delay.plant)
-							reconnect(bz,door,x,y)
-						end
-						while getTile(x,y).fg == setting.seed do
-							place(setting.mode.seed,0,0)
-							sleep(setting.delay.plant)
-							reconnect(bz,door,x,y)
-						end
-					else
-						if getTile(x,y).fg ~= setting.seed then
-							place(setting.seed,0,0)
-							sleep(setting.delay.plant)
-							reconnect(bz,door,x,y)
-						end
-					end
-				end
-			end
-			if tiles == 1 then
-				if t1 == 0 then
-					t1 = 99
-					t2 = 0
-					t3 = -1
-					tiles = 0
-				elseif t1 == 99 then
-					t1 = 0
-					t2 = 99
-					t3 = 1
-					tiles = 0
-				end
-			elseif tiles == 0 then
-				tiles = tiles + 1
-			end
-		end
-	end
-	iTile = 0
-end
-
-function gscan(id)
-	count = 0
+identity.itemFloat = function(id)
+	local count = 0
 	for _, obj in pairs(getObjects()) do
 		if obj.id == id then
 			count = count + obj.count
@@ -347,46 +220,150 @@ function gscan(id)
 	return count
 end
 
-function cektree(bz)
-	webcuy('Rechecking worlds')
-	for i = 1,2 do
-        for _, tile in pairs(getTiles()) do
+identity.goodtimes = function(estimates)
+    local seconds = tonumber(estimates)
+    if seconds <= 0 then
+        return "00:00:00";
+    else
+        hours = string.format("%02.f", math.floor(estimates/3600));
+        minutes = string.format("%02.f", math.floor(estimates/60 - (hours*60)));
+        seconds = string.format("%02.f", math.floor(estimates - hours*3600 - minutes *60));
+        return ""..hours.." : "..minutes.." : "..seconds
+    end
+end
+
+identity.take = function(threads)
+    for i = index , #setting.storage.world do
+        setJob("Take seed")
+		world = setting.storage.world[i]
+        identity.door = setting.storage.id
+        identity.warp(world,identity.door)
+        identity.webhookinfo("Take seeds")
+		if not nuked then
+			if not wrong then
+				if identity.itemFloat(setting.seed) == 0 then
+					infoid[world] = ""..identity.itemFloat(setting.seed).." EMPTY !!"
+					identity.botinfo("Seeds storage : [ ||"..getBot().world.."|| ] has empty, skipped world @everyone")
+					print("Seeds storage : [ "..getBot().world.." ] has empty, skipped world")
+					index = index + 1
+					if index > #setting.storage.world then
+						infoid[world] = ""..identity.itemFloat(setting.seed).." EMPTY !!"
+						identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] slot : "..slot.." @everyone")
+						print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ] slot : "..slot.."")
+						identity.webhookinfo("All seed storage has empty, Removing bot!")
+						if setting.removeBot then
+							removeBot(getBot().name)
+							sleep(100)
+						end
+						error()
+					end
+				else
+					for _, object in pairs(getObjects()) do
+						if object.id == setting.seed then
+							findPath(identity.round((object.x)/32), math.floor((object.y)/32))
+							sleep(500)
+							collect(2)
+							sleep(500)
+						end
+						if findItem(setting.seed) > 0 then
+							break
+						end
+					end
+					if setting.mode.splice then
+						for _, object in pairs(getObjects()) do
+							if object.id == setting.mode.seed then
+								findPath(identity.round((object.x)/32), math.floor((object.y)/32))
+								sleep(500)
+								collect(2)
+								sleep(500)
+							end
+							if findItem(setting.mode.seed) > 0 then
+								break
+							end
+						end
+					end
+					sleep(100)
+					break
+				end
+			else
+				infoid[world] = "WRONG DOOR ID"
+				wrong = false
+				sleep(1000)
+				identity.botinfo("Seeds storage : [ ||"..getBot().world.."|| ] is wrong door id, skipped world @everyone")
+				print("Seeds storage : [ "..getBot().world.." ] is wrong door id, skipped world")
+				seedd = seedd + 1
+				if seedd > #setting.storage.world then
+					identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] slot : "..slot.." @everyone")
+					print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ] slot : "..slot.."")
+					identity.webhookinfo("All seed storage has empty, Removing bot!")
+					if setting.removeBot then
+						removeBot(getBot().name)
+						sleep(100)
+					end
+					error()
+				end
+			end
+		else
+			infoid[world] = "NUKED"
+			nuked = false
+			sleep(1000)
+			identity.botinfo("Seeds storage : [ ||"..getBot().world.."|| ] is NUKED, skipped world @everyone")
+			print("Seeds storage : [ "..getBot().world.." ] is NUKED, skipped world")
+			seedd = seedd + 1
+			if seedd > #setting.storage.world then
+				identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] slot : "..slot.." @everyone")
+				print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ] slot : "..slot.."")
+				identity.webhookinfo("All seed storage has empty, Removing bot!")
+				if setting.removeBot then
+					removeBot(getBot().name)
+					sleep(100)
+				end
+				error()
+			end
+		end
+	end
+	infoid[world] = ""..identity.itemFloat(setting.seed)..""
+	setJob("Planting")
+end
+
+identity.recheck = function(threads)
+	identity.webhookinfo('Rechecking worlds')
+	for _, tile in pairs(getTiles()) do
+		for i = 1,2 do
 			if tile.fg == 0 and getTile(tile.x, tile.y + 1).flags ~= 0 then
 				if setting.mode.splice then
 					if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
-						take(bz)
-						door = idList
-						warp(bz,door)
-						sleep(e)
-						webcuy("Planting mode : "..string.upper(mode).."")
+						identity.take(threads)
+						identity.door = identity.param
+						identity.warp(threads,identity.door)
+						identity.webhookinfo("Planting mode : "..string.upper(mode).."")
 					end
 				else
 					if findItem(setting.seed) == 0 then
-						take(bz)
-						door = idList
-						warp(bz,door)
-						sleep(e)
-						webcuy("Planting mode : "..string.upper(mode).."")
+						identity.take(threads)
+						identity.door = identity.param
+						identity.warp(threads,identity.door)
+						identity.webhookinfo("Planting mode : "..string.upper(mode).."")
 					end
-				end 
+				end
 				findPath(tile.x,tile.y)
-				door = idList
+				identity.door = identity.param
 				if setting.mode.splice then
 					while getTile(tile.x,tile.y).fg ~= setting.seed do
 						place(setting.seed,0,0)
 						sleep(setting.delay.plant)
-						reconnect(bz,door,tile.x,tile.y)
+						identity.reconnect(threads,identity.door,tile.x,tile.y)
 					end
 					while getTile(tile.x,tile.y).fg == setting.seed do
 						place(setting.mode.seed,0,0)
 						sleep(setting.delay.plant)
-						reconnect(bz,door,tile.x,tile.y)
+						identity.reconnect(threads,identity.door,tile.x,tile.y)
 					end
 				else
 					if getTile(tile.x,tile.y).fg ~= setting.seed then
 						place(setting.seed,0,0)
 						sleep(setting.delay.plant)
-						reconnect(bz,door,tile.x,tile.y)
+						identity.reconnect(threads,identity.door,tile.x,tile.y)
 					end
 				end
 			end
@@ -394,160 +371,162 @@ function cektree(bz)
 	end
 end
 
-barr = {setting.seed,setting.mode.seed}
-function take(bz)
-    for i = seedd , #setting.storage.world do
-        setJob('Take seed')
-		world = setting.storage.world[i]
-        door = setting.storage.id
-        warp(world,door)
-        webcuy('Take seeds')
-		if not nuked then
-			if not wrong then
-				if setting.mode.splice then
-					if gscan(setting.seed) == 0 or gscan(setting.mode.seed) == 0 then
-						wirz[world] = "[ "..gscan(setting.seed).." / "..gscan(setting.mode.seed).." ] EMPTY !!"
-						infokand("[ ||"..getBot().world.."|| ] is empty, skipped world. @everyone")
-						seedd = seedd + 1
-						if seedd > #setting.storage.world then
-							infokand("All storage is empty!, @everyone")
-							if setting.removeBot then
-								removeBot(getBot().name)
-								sleep(e)
-							end
-							error()
+
+identity.plant = function(threads)
+	tileA = 99
+	tileB = 0
+	tileC = -1
+	tileD = 0
+    identity.webhookinfo("Planting mode : "..string.upper(mode).."")
+	if mode == "up" then
+		for y = -1, 53 do
+			for x = tileA, tileB, tileC do
+				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
+					if setting.mode.splice then
+						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
+							identity.take(threads)
+							identity.door = identity.param
+							identity.warp(threads,identity.door)
+							identity.webhookinfo("Planting mode : "..string.upper(mode).."")
 						end
 					else
-						for _, list in pairs(barr) do
-							for _, object in pairs(getObjects()) do
-								if object.id == list then
-									findPath(round((object.x)/32), math.floor((object.y)/32))
-									sleep(e)
-									collect(2)
-									sleep(e*3)
-								end
-								if findItem(list) > 0 then
-									break
-								end
-							end
+						if findItem(setting.seed) == 0 then
+							identity.take(threads)
+							identity.door = identity.param
+							identity.warp(threads,identity.door)
+							identity.webhookinfo("Planting mode : "..string.upper(mode).."")
 						end
-						sleep(100)
-						break
 					end
-				else
-					if gscan(setting.seed) == 0 then
-						wirz[world] = "[ "..gscan(setting.seed).." / "..gscan(setting.mode.seed).." ] EMPTY !!"
-						infokand("[ ||"..getBot().world.."|| ] is empty, skipped world. @everyone")
-						seedd = seedd + 1
-						if seedd > #setting.storage.world then
-							infokand("All storage is empty!, @everyone")
-							if setting.removeBot then
-								removeBot(getBot().name)
-								sleep(e)
-							end
-							error()
+					findPath(x,y)
+					identity.door = identity.param
+					if setting.mode.splice then
+						while getTile(x,y).fg ~= setting.seed do
+							place(setting.seed,0,0)
+							sleep(setting.delay.plant)
+							identity.reconnect(threads,identity.param,x,y)
+						end
+						while getTile(x,y).fg == setting.seed do
+							place(setting.mode.seed,0,0)
+							sleep(setting.delay.plant)
+							identity.reconnect(threads,identity.param,x,y)
 						end
 					else
-						for _, object in pairs(getObjects()) do
-							if object.id == setting.seed then
-								findPath(round((object.x)/32), math.floor((object.y)/32))
-								sleep(e)
-								collect(2)
-								sleep(e*3)
-							end
-							if findItem(setting.seed) > 0 then
-								break
-							end
+						if getTile(x,y).fg ~= setting.seed then
+							place(setting.seed,0,0)
+							sleep(setting.delay.plant)
+							identity.reconnect(threads,identity.param,x,y)
 						end
-						sleep(100)
-						break
 					end
 				end
-			else
-                wirz[world] = 'WRONG DOOR ID'
-                wrong = false
-                sleep(1000)
-                print("Id door storage seeds is wrong, check ur id door !!")
-                infokand("Id door storage seeds is wrong, check ur id door !!")
-                seedd = seedd + 1
-                if seedd > #setting.storage.world then
-					print('All storage seeds is empty')
-					infokand("All storage seeds is empty!, @everyone")
-                    if setting.removeBot then
-                        removeBot(getBot().name)
-                        sleep(100)
-                    end
-                    error()
-                end
-            end
-        else
-            wirz[world] = 'NUKED'
-            nuked = false
-            sleep(1000)
-            print("World storage seeds is NUKED!, check ur world !!")
-            infokand("World storage seeds is NUKED!, check ur world !! @everyone")
-            seedd = seedd + 1
-            if seedd > #setting.storage.world then
-                print('All storage seeds is empty')
-                infokand("All storage seeds is empty!, @everyone")
-                if setting.removeBot then
-                    removeBot(getBot().name)
-                    sleep(100)
-                end
-                error()
-            end
-        end
-    end
-	wirz[world] = "[ "..gscan(setting.seed).." / "..gscan(setting.mode.seed).." ]"
-end
-
-st = os.time()
-function alamak(secs)
-	local seconds = tonumber(secs)
-	if seconds <= 0 then
-	  	return "00:00:00";
-	else
-	  	h = string.format("%02.f", math.floor(secs/3600));
-		m = string.format("%02.f", math.floor(secs/60 - (h*60)));
-	  	s = string.format("%02.f", math.floor(secs - h*3600 - m *60));
-	  	return h..":"..m..":"..s
+			end
+			if tileD == 1 then
+				if tileA == 0 then
+					tileA = 99
+					tileB = 0
+					tileC = -1
+					tileD = 0
+				elseif tileA == 99 then
+					tileA = 0
+					tileB = 99
+					tileC = 1
+					tileD = 0
+				end
+			elseif tileD == 0 then
+				tileD = tileD + 1
+			end
+		end
+	elseif mode == "down" then
+		for y = 53, 0, -1 do
+			for x = tileA, tileB, tileC do
+				if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
+					if setting.mode.splice then
+						if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
+							identity.take(threads)
+							identity.door = identity.param
+							identity.warp(threads,identity.door)
+							identity.webhookinfo("Planting mode : "..string.upper(mode).."")
+						end
+					else
+						if findItem(setting.seed) == 0 then
+							identity.take(threads)
+							identity.door = identity.param
+							identity.warp(threads,identity.door)
+							identity.webhookinfo("Planting mode : "..string.upper(mode).."")
+						end
+					end
+					findPath(x,y)
+					identity.door = identity.param
+					if setting.mode.splice then
+						while getTile(x,y).fg ~= setting.seed do
+							place(setting.seed,0,0)
+							sleep(setting.delay.plant)
+							identity.reconnect(threads,identity.param,x,y)
+						end
+						while getTile(x,y).fg == setting.seed do
+							place(setting.mode.seed,0,0)
+							sleep(setting.delay.plant)
+							identity.reconnect(threads,identity.param,x,y)
+						end
+					else
+						if getTile(x,y).fg ~= setting.seed then
+							place(setting.seed,0,0)
+							sleep(setting.delay.plant)
+							identity.reconnect(threads,identity.param,x,y)
+						end
+					end
+				end
+			end
+			if tileD == 1 then
+				if tileA == 0 then
+					tileA = 99
+					tileB = 0
+					tileC = -1
+					tileD = 0
+				elseif tileA == 99 then
+					tileA = 0
+					tileB = 99
+					tileC = 1
+					tileD = 0
+				end
+			elseif tileD == 0 then
+				tileD = tileD + 1
+			end
+		end
 	end
 end
 
-if BizzantiuM.version == "1.3" and BizzantiuM.maker == "akbarsht" then
+if BizzantiuM.version == "1.0" and BizzantiuM.handler == "akbarsht" then
 	for i =  startfrom, #farmList do
-		door = idList
+		identity.door = identity.param
 		setJob("Planting")
-		sleep(e)
-		warp(farmList[i],door)
-		webcuy("Planting mode "..mode.."")
+		identity.warp(farmList[i],identity.door)
+		identity.webhookinfo("Planting mode "..mode.."")
 		if not nuked then
 			if not wrong then
-				plant(farmList[i])
-				cektree(farmList[i])
-				wirz[farmList[i]] = "```"..alamak(os.difftime(os.time(),st)).."```"
+				identity.plant(farmList[i])
+				identity.recheck(farmList[i])
+				timer[farmList[i]] = ""..identity.goodtimes(os.difftime(os.time(),identity.goodtime))..""
             else
-                wirz[farmList[i]] = 'WRONG DOOR ID'
+                timer[farmList[i]] = "WRONG DOOR ID"
                 wrong = false
                 sleep(1000)
-                print("[ ||"..farmList[i].."|| ] is wrong door id, skipped world")
-                infokand("[ ||"..farmList[i].."|| ] is wrong door id, skipped world @everyone")
+                print("[ "..farmList[i].." ] is wrong door id, skipped world")
+                identity.webhookinfo("[ ||"..farmList[i].."|| ] is wrong door id, skipped world @everyone")
             end
         else
-            wirz[farmList[i]] = 'NUKED'
+            timer[farmList[i]] = "NUKED"
             nuked = false
             sleep(1000)
-            print("||"..farmList[i].."|| is NUKED!, check ur world !!")
-            infokand("[ ||"..farmList[i].."|| ] is NUKED!, check ur world !! @everyone")
+            print(""..farmList[i].." is NUKED!, check ur world !!")
+            identity.webhookinfo("[ ||"..farmList[i].."|| ] is NUKED!, check ur world !! @everyone")
         end
 	end
 end
-print("ALREADY FINISHED ALL FARM ! Removing BOT")
-infokand("[ ||"..getBot().name.."|| ] slot : "..slot.." has already planting all worlds, @everyone")
-webcuy("ALREADY FINISHED ALL FARM ! Removing BOT")
-sleep(e)
+print("Allready finished all world, removing bot!")
+identity.botinfo("[ ||"..getBot().name.."|| ] slot : "..slot.." Allready finished all world, removing bot! @everyone")
+identity.webhookinfo("Allready finished all world, removing bot!")
 if setting.removeBot then
 	removeBot(getBot().name)
-	sleep(e)
+	sleep(100)
 end
 error()
