@@ -291,7 +291,7 @@ identity.take = function(threads)
 				sleep(1000)
 				identity.botinfo("Seeds storage : [ ||"..getBot().world.."|| ] is wrong door id, skipped world @everyone")
 				print("Seeds storage : [ "..getBot().world.." ] is wrong door id, skipped world")
-				seedd = seedd + 1
+				index = index + 1
 				if seedd > #setting.storage.world then
 					identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] slot : "..slot.." @everyone")
 					print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ] slot : "..slot.."")
@@ -309,7 +309,7 @@ identity.take = function(threads)
 			sleep(1000)
 			identity.botinfo("Seeds storage : [ ||"..getBot().world.."|| ] is NUKED, skipped world @everyone")
 			print("Seeds storage : [ "..getBot().world.." ] is NUKED, skipped world")
-			seedd = seedd + 1
+			index = index + 1
 			if seedd > #setting.storage.world then
 				identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] slot : "..slot.." @everyone")
 				print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ] slot : "..slot.."")
