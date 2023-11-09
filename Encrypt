@@ -264,7 +264,7 @@ identity.take = function(threads)
 		world = setting.storage.world[i]
         identity.door = setting.storage.id
         identity.warp(world,identity.door)
-        identity.webhookinfo("Take seeds")
+        identity.webhookinfo()
 		if not nuked then
 			if not wrong then
 				if identity.itemFloat(setting.seed) == 0 then
@@ -276,7 +276,6 @@ identity.take = function(threads)
 						infoid[world] = ""..identity.itemFloat(setting.seed).." EMPTY !!"
 						identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] @everyone")
 						print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ]")
-						identity.webhookinfo("All seed storage has empty, Removing bot!")
 						if setting.removeBot then
 							removeBot(getBot().name)
 							sleep(100)
@@ -321,7 +320,6 @@ identity.take = function(threads)
 				if identity.takeseed > #setting.storage.world then
 					identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] @everyone")
 					print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ]")
-					identity.webhookinfo("All seed storage has empty, Removing bot!")
 					if setting.removeBot then
 						removeBot(getBot().name)
 						sleep(100)
@@ -339,7 +337,6 @@ identity.take = function(threads)
 			if identity.takeseed > #setting.storage.world then
 				identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] @everyone")
 				print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ]")
-				identity.webhookinfo("All seed storage has empty, Removing bot!")
 				if setting.removeBot then
 					removeBot(getBot().name)
 					sleep(100)
@@ -353,7 +350,6 @@ identity.take = function(threads)
 end
 
 identity.recheck = function(threads)
-	identity.webhookinfo('Rechecking worlds')
 	for _, tile in pairs(getTiles()) do
 		for i = 1,2 do
 			if tile.fg == 0 and getTile(tile.x, tile.y + 1).flags ~= 0 then
@@ -362,12 +358,14 @@ identity.recheck = function(threads)
 						identity.take(threads)
 						identity.door = identity.param
 						identity.warp(threads,identity.door)
+                        identity.webhookinfo()
 					end
 				else
 					if findItem(setting.seed) == 0 then
 						identity.take(threads)
 						identity.door = identity.param
 						identity.warp(threads,identity.door)
+                        identity.webhookinfo()
 					end
 				end
 				findPath(tile.x,tile.y)
@@ -575,19 +573,19 @@ if BizzantiuM.version == "1.1" and BizzantiuM.handler == "akbarsht" then
                 wrong = false
                 sleep(1000)
                 print("[ "..value.." ] is wrong door id, skipped world")
+                identity.botinfo("[ ||"..value.."|| ] is wrong door id, skipped world !! @everyone")
             end
         else
             timer[value] = "NUKED"
             nuked = false
             sleep(1000)
             print(""..value.." is NUKED!, check ur world !!")
-            identity.webhookinfo("[ ||"..value.."|| ] is NUKED!, check ur world !! @everyone")
+            identity.botinfo("[ ||"..value.."|| ] is NUKED!, check ur world !! @everyone")
         end
 	end
 end
 print("Allready finished all world, removing bot!")
 identity.botinfo("[ ||"..getBot().name.."|| ] Allready finished all world, removing bot! @everyone")
-identity.webhookinfo("Allready finished all world, removing bot!")
 if setting.removeBot then
 	removeBot(getBot().name)
 	sleep(100)
