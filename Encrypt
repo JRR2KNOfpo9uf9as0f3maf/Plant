@@ -53,7 +53,7 @@ identity.botstatus = function()
     strings = ""
     for _, bot in pairs(getBots()) do
         if setting.webhook.short then
-            strings = strings.."\n"..""..(string.sub(bot.name,1,3)).." | ||"..(string.sub(bot.world,1,3)).."|| | "..(string.sub(bot.status,1,2)).."" 
+            strings = strings.."\n"..""..(string.sub(bot.name,1,3)).." | ||"..(string.sub(bot.world,1,3)).."|| | "..(string.upper(bot.status)).."" 
         else
             strings = strings.."\n"..""..(string.upper(bot.name)).." | ||"..(string.upper(bot.world)).."|| | "..(string.upper(bot.status)).."" 
         end
@@ -71,18 +71,6 @@ identity.storagename = function()
         end
     end
     return strings
-end
-
-identity.farmname = function()
-    strings = ""
-	for i = 1, #setting.farmList.world do
-        if setting.webhook.short then
-    		strings = strings.."\n||"..(string.sub(setting.farmList.world[i],1,3)).."|| : "..(timer[setting.farmList.world[i]] or "?")..""
-        else
-    		strings = strings.."\n||"..(string.upper(setting.farmList.world[i])).."|| : "..(timer[setting.farmList.world[i]] or "?")..""
-        end
-	end
-	return strings
 end
 
 identity.webhookinfo = function()
@@ -104,17 +92,12 @@ identity.webhookinfo = function()
                             @{
                                 name = "BOT INFO"
                                 value = "]]..identity.botstatus()..[["
-                                inline = "false"
+                                inline = "true"
                             }
                             @{
                                 name = "STORAGE STATIC"
                                 value = "]]..identity.storagename()..[["
                                 inline = "true"
-                            }
-                            @{
-                                name = "WORLD STATIC"
-                                value = "]]..identity.farmname()..[["
-                                inline = "false"
                             }
                         )
                         footer = @{
@@ -544,6 +527,12 @@ identity.killing = function()
     end
 end
 
+identity.writeFile = function(threads)
+    local file = io.open("WorldStatus.txt","a")
+    file:write(threads.."\n")
+    file:close()
+end
+
 if BizzantiuM.version == "1.1" and BizzantiuM.handler == "akbarsht" then
     sleep(math.random(300,3000))
     if setting.mode.killghost then
@@ -563,20 +552,21 @@ if BizzantiuM.version == "1.1" and BizzantiuM.handler == "akbarsht" then
 		identity.door = setting.farmList.door
 		setJob("Planting")
 		identity.warp(value,identity.door)
+        identity.webhookinfo()
 		if not nuked then
 			if not wrong then
 				identity.plant(value)
 				identity.recheck(value)
 				timer[value] = ""..identity.goodtimes(os.difftime(os.time(),identity.goodtime))..""
             else
-                timer[value] = "WRONG DOOR ID"
+                identity.writeFile("[ "..value.." ] is wrong id")
                 wrong = false
                 sleep(1000)
                 print("[ "..value.." ] is wrong door id, skipped world")
                 identity.botinfo("[ ||"..value.."|| ] is wrong door id, skipped world !! @everyone")
             end
         else
-            timer[value] = "NUKED"
+            identity.writeFile("[ "..value.." ] is NUKED !!")
             nuked = false
             sleep(1000)
             print(""..value.." is NUKED!, check ur world !!")
