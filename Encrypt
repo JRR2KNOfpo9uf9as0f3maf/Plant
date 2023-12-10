@@ -4,20 +4,17 @@ for i, bot in pairs(getBots()) do
     end
 end
 
-webhook = setting.webhook.infostorage.link
-message = setting.webhook.infostorage.messageid
 index = 1
 timer = {}
 infoid = {}
 worlds = {}
 strings = ""
 local identity = {}
-identity.param = setting.farmList.door
 identity.takeseed = 1
 identity.goodtime = os.time()
 
-for i =  1,setting.farmList.worldperbot do
-    table.insert(worlds,setting.farmList.world[math.floor((indexbot - 1) * setting.farmList.worldperbot + i)])
+for i =  1,worldperbot do
+    table.insert(worlds,farmList[math.floor((indexbot - 1) * worldperbot + i)])
 end
 
 identity.splitt = function(str, ptr)
@@ -32,9 +29,9 @@ identity.splitt = function(str, ptr)
 end
 
 identity.botinfo = function(content)
-	if setting.webhook.access then
+	if webhookstatus then
 		text = [[
-			$webHookUrl = "]]..setting.webhook.status..[["
+			$webHookUrl = "]]..webhookstatuslink..[["
 			$payload = @{
 				content = "]]..content..[["
 			}
@@ -50,7 +47,7 @@ end
 identity.botstatus = function()
     strings = ""
     for _, bot in pairs(getBots()) do
-        if setting.webhook.short then
+        if short then
             strings = strings.."\n"..""..(string.sub(bot.name,1,3)).." | ||"..(string.sub(bot.world,1,3)).."|| | "..(string.upper(bot.status)).."" 
         else
             strings = strings.."\n"..""..(string.upper(bot.name)).." | ||"..(string.upper(bot.world)).."|| | "..(string.upper(bot.status)).."" 
@@ -61,25 +58,25 @@ end
 
 identity.storagename = function()
     strings = ""
-	for i = 1, #setting.storage.world do
-        if setting.webhook.short then
-    		strings = strings.."\n||"..(string.sub(setting.storage.world[i],1,3)).."|| "..(infoid[setting.storage.world[i]] or "?")..""
+	for i = 1, #storage do
+        if short then
+    		strings = strings.."\n||"..(string.sub(storage[i],1,3)).."|| "..(infoid[storage[i]] or "?")..""
         else
-    		strings = strings.."\n||"..(string.upper(setting.storage.world[i])).."|| "..(infoid[setting.storage.world[i]] or "?")..""
+    		strings = strings.."\n||"..(string.upper(storage[i])).."|| "..(infoid[storage[i]] or "?")..""
         end
     end
     return strings
 end
 
 identity.webhookinfo = function()
-	if setting.webhook.infostorage.access then
+	if infostorage then
         local text = [[
-            $webHookUrl = "]]..webhook..[[/messages/]]..message..[["
+            $webHookUrl = "]]..linkinfostorage..[[/messages/]]..messageidinfostorage..[["
             $payload = @{
                 username = "BizzantiuM's"
                 embeds = @(
                     @{
-                        title = "AUTO PLANT v1.1"
+                        title = "AUTO PLANT v1.2"
                         color = "]]..math.random(111111,999999)..[["
                         fields = @(
                             @{
@@ -114,20 +111,16 @@ identity.webhookinfo = function()
 end
 
 identity.reconnect = function(world,id,x,y)
-    if getBot().world ~= world:upper() and getBot().status == "online" then 
+    if getBot().world == "EXIT" and getBot().status == "online" then 
         identity.botinfo("[ ||"..getBot().name.."|| ] at another world ??, trying to joining world again @everyone")
-        sleep(250)
-        print("[ "..getBot().name.." ] at another world ??, trying to joining world again")
-        sleep(250)
         local count = 0
         while getBot().world ~= world:upper() do
             sendPacket("action|join_request\nname|"..world:upper().."\ninvitedWorld|0",3)
-            sleep(setting.delay.warp)
+            sleep(warp)
             if getBot().world ~= world:upper() then 
                 count = count + 1
                 if count > 5 then
                     identity.botinfo("[ ||"..getBot().name.."|| ] Failed to joining world again, terminated script @everyone")
-                    sleep(250)
                     error()
                 end
             end
@@ -136,10 +129,9 @@ identity.reconnect = function(world,id,x,y)
             local stucks = 0
             while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 do
                 sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
-                sleep(setting.delay.warp)
+                sleep(warp)
                 if stucks > 3 then
                     identity.botinfo("[ ||"..getBot().name.."|| ] Failed to reconnecting bot, stuck at white door. Terminated script @everyone")
-                    sleep(250)
                     error()
                 end
             end
@@ -151,24 +143,16 @@ identity.reconnect = function(world,id,x,y)
             end
         end
         identity.botinfo("[ ||"..getBot().name.."|| ] success to joining world @everyone")
-        sleep(250)
-        print("[ "..getBot().name.." ] success to joining world")
-        sleep(250)
     end
     if getBot().status ~= "online" then
         identity.botinfo("[ ||"..getBot().name.."|| ] status is "..getBot().status.." @everyone")
-        sleep(250)
-        print("[ "..getBot().name.." ] status is "..getBot().status.."")
-        sleep(250)
         while getBot().status ~= "online" do
             connect()
-            sleep(setting.delay.reconnect)
+            sleep(reconnect)
             if getBot().status == "suspended" or getBot().status == "banned" or getBot().status == "maintenance" then
                 identity.botinfo("[ ||"..getBot().name.."|| ] status is "..getBot().status..", removing bot @everyone")
-                sleep(250)
                 print("[ "..getBot().name.." ] status is "..getBot().status..", removing bot")
-                sleep(250)
-                if setting.mode.removeBot then
+                if removeBot then
                     removeBot(getBot().name)
                     sleep(2000)
                 end
@@ -178,12 +162,11 @@ identity.reconnect = function(world,id,x,y)
         local counts = 0
         while getBot().world ~= world:upper() do
             sendPacket("action|join_request\nname|"..world:upper().."\ninvitedWorld|0",3)
-            sleep(setting.delay.warp)
+            sleep(warp)
             if getBot().world ~= world:upper() then 
                 counts = counts + 1
                 if counts > 5 then
                     identity.botinfo("[ ||"..getBot().name.."|| ] Failed to joining world again, terminated script @everyone")
-                    sleep(250)
                     error()
                 end
             end
@@ -192,10 +175,9 @@ identity.reconnect = function(world,id,x,y)
             local stuckk = 0
             while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 do
                 sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
-                sleep(setting.delay.warp)
+                sleep(warp)
                 if stuckk > 3 then
                     identity.botinfo("[ ||"..getBot().name.."|| ] Failed to reconnecting bot, stuck at white door. Terminated script @everyone")
-                    sleep(250)
                     error()
                 end
             end
@@ -207,21 +189,16 @@ identity.reconnect = function(world,id,x,y)
             end
         end
         identity.botinfo("[ ||"..getBot().name.."|| ] status is "..getBot().status.." @everyone")
-        sleep(250)
-        print("[ "..getBot().name.." ] status is "..getBot().status.."")
-        sleep(250)
     end
     if getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 then
         identity.botinfo("[ ||"..getBot().name.."|| ] Stuck at white door ! @everyone")
-        sleep(250)
         local stuck = 0
         if id ~= "" then
             while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 do
                 sendPacket("action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0", 3)
-                sleep(setting.delay.warp)
+                sleep(warp)
                 if stuck > 3 then
                     identity.botinfo("[ ||"..getBot().name.."|| ] Failed to reconnecting bot, stuck at white door. Terminated script @everyone")
-                    sleep(250)
                 end
             end
         end
@@ -232,7 +209,6 @@ identity.reconnect = function(world,id,x,y)
             end
         end
         identity.botinfo("[ ||"..getBot().name.."|| ] Already back to pos ! @everyone")
-        sleep(250)
     end
 end
 
@@ -261,11 +237,7 @@ identity.warp = function(world,door)
         local join = 0
         while getBot().world ~= string.upper(world) and not nuked and not subserver and not people and not level do
             sendPacket("action|join_request\nname|"..name.."\ninvitedWorld|0",3)
-            sleep(setting.delay.warp)
-            join = join + 1
-            if join == 5 then
-                server = true
-            end
+            sleep(warp)
         end
         removeHooks()
         sleep(2000)
@@ -275,7 +247,7 @@ identity.warp = function(world,door)
             local stuck = 0
             while getTile(math.floor(getBot().x / 32),math.floor(getBot().y / 32)).fg == 6 and not wrong do
                 sendPacket("action|join_request\nname|"..name.."\ninvitedWorld|0",3)
-                sleep(setting.delay.warp)
+                sleep(warp)
                 stuck = stuck + 1
                 if stuck == 5 then
                     wrong = true
@@ -308,36 +280,28 @@ identity.goodtimes = function(estimates)
 end
 
 identity.take = function(threads)
-    for i = identity.takeseed , #setting.storage.world do
+    for i = identity.takeseed , #storage do
         ::BACK::
         setJob("Take seed")
-        sleep(250)
-		world = setting.storage.world[i]
-        identity.door = setting.storage.id
-        identity.warp(world,identity.door)
-        sleep(250)
+        world = storage[i]
+        identity.warp(world,doorstorage)
         identity.webhookinfo()
-        sleep(250)
-        if not server then
-            if not people then
-                if not level then
-                    if not subserver then
-                        if not nuked then
-                            if not wrong then
-                                if identity.itemFloat(setting.seed) == 0 then
-                                    infoid[world] = ""..identity.itemFloat(setting.seed).." EMPTY !!"
+        if not people then
+            if not level then
+                if not subserver then
+                    if not nuked then
+                        if not wrong then
+                            if not looping then
+                                if identity.itemFloat(seed) == 0 then
+                                    infoid[world] = ""..identity.itemFloat(seed).." EMPTY !!"
                                     identity.botinfo("Seeds storage : [ ||"..world.."|| ] has empty, skipped world @everyone")
-                                    sleep(250)
                                     print("Seeds storage : [ "..world.." ] has empty, skipped world")
-                                    sleep(250)
                                     identity.takeseed = identity.takeseed + 1
-                                    if identity.takeseed > #setting.storage.world then
-                                        infoid[world] = ""..identity.itemFloat(setting.seed).." EMPTY !!"
+                                    if identity.takeseed > #storage then
+                                        infoid[world] = ""..identity.itemFloat(seed).." EMPTY !!"
                                         identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] @everyone")
-                                        sleep(250)
                                         print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ]")
-                                        sleep(250)
-                                        if setting.removeBot then
+                                        if removeBot then
                                             removeBot(getBot().name)
                                             sleep(2000)
                                         end
@@ -345,27 +309,27 @@ identity.take = function(threads)
                                     end
                                 else
                                     for _, object in pairs(getObjects()) do
-                                        if object.id == setting.seed then
+                                        if object.id == seed then
                                             findPath(math.floor((object.x)/32), math.floor((object.y)/32))
                                             sleep(1000)
                                             collect(2)
                                             sleep(1000)
-                                            identity.reconnect(world,identity.door,math.floor((object.x)/32), math.floor((object.y)/32))
+                                            identity.reconnect(world,doorstorage,math.floor((object.x)/32), math.floor((object.y)/32))
                                         end
-                                        if findItem(setting.seed) > 0 then
+                                        if findItem(seed) > 0 then
                                             break
                                         end
                                     end
-                                    if setting.mode.splice then
+                                    if splice then
                                         for _, object in pairs(getObjects()) do
-                                            if object.id == setting.mode.seed then
+                                            if object.id == seedsplice then
                                                 findPath(math.floor((object.x)/32), math.floor((object.y)/32))
                                                 sleep(1000)
                                                 collect(2)
                                                 sleep(1000)
-                                                identity.reconnect(world,identity.door,math.floor((object.x)/32), math.floor((object.y)/32))
+                                                identity.reconnect(world,doorstorage,math.floor((object.x)/32), math.floor((object.y)/32))
                                             end
-                                            if findItem(setting.mode.seed) > 0 then
+                                            if findItem(seedsplice) > 0 then
                                                 break
                                             end
                                         end
@@ -374,41 +338,46 @@ identity.take = function(threads)
                                     break
                                 end
                             else
-                                infoid[world] = "WRONG DOOR ID"
-                                wrong = false
-                                sleep(5000)
-                                identity.botinfo("Seeds storage : [ ||"..world.."|| ] is wrong door id, skipped world @everyone")
-                                sleep(250)
-                                print("Seeds storage : [ "..world.." ] is wrong door id, skipped world")
-                                sleep(250)
-                                identity.takeseed = identity.takeseed + 1
-                                if identity.takeseed > #setting.storage.world then
-                                    identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] @everyone")
-                                    sleep(250)
-                                    print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ]")
-                                    sleep(250)
-                                    if setting.removeBot then
-                                        removeBot(getBot().name)
-                                        sleep(2000)
+                                for _, object in pairs(getObjects()) do
+                                    if object.id == seed then
+                                        findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                        sleep(1000)
+                                        collect(2)
+                                        sleep(1000)
+                                        identity.reconnect(world,doorstorage,math.floor((object.x)/32), math.floor((object.y)/32))
                                     end
-                                    error()
+                                    if findItem(seed) > 0 then
+                                        break
+                                    end
                                 end
+                                if splice then
+                                    for _, object in pairs(getObjects()) do
+                                        if object.id == seedsplice then
+                                            findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                            sleep(1000)
+                                            collect(2)
+                                            sleep(1000)
+                                            identity.reconnect(world,doorstorage,math.floor((object.x)/32), math.floor((object.y)/32))
+                                        end
+                                        if findItem(seedsplice) > 0 then
+                                            break
+                                        end
+                                    end
+                                end
+                                sleep(100)
+                                break
                             end
                         else
-                            infoid[world] = "NUKED"
-                            nuked = false
+                            infoid[world] = "WRONG DOOR ID"
+                            wrong = false
                             sleep(5000)
-                            identity.botinfo("Seeds storage : [ ||"..world.."|| ] is NUKED, skipped world @everyone")
-                            sleep(250)
-                            print("Seeds storage : [ "..world.." ] is NUKED, skipped world")
-                            sleep(250)
+                            identity.botinfo("Seeds storage : [ ||"..world.."|| ] is wrong door id, skipped world @everyone")
+                            print("Seeds storage : [ "..world.." ] is wrong door id, skipped world")
                             identity.takeseed = identity.takeseed + 1
-                            if identity.takeseed > #setting.storage.world then
+                            if identity.takeseed > #storage then
                                 identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] @everyone")
-                                sleep(250)
                                 print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ]")
-                                sleep(250)
-                                if setting.removeBot then
+                                if removeBot then
                                     removeBot(getBot().name)
                                     sleep(2000)
                                 end
@@ -416,451 +385,306 @@ identity.take = function(threads)
                             end
                         end
                     else
-                        subserver = false
-                        sleep(5000)
-                        print("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes")
-                        sleep(250)
-                        identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes @everyone")
-                        sleep(300000)
-                        goto BACK
-                    end
-                else
-                    level = false
-                    sleep(5000)
-                    print("World : "..world.." has level limit, change ur level world limit")
-                    sleep(250)
-                    identity.botinfo("World : "..world.." has level limit, change ur level world limit !, terminated script @everyone")
-                    sleep(250)
-                    error()
-                end
-            else
-                people = false
-                sleep(5000)
-                print("World : "..world.." has full people, sleeping for 5 minutes")
-                sleep(250)
-                identity.botinfo("World : "..world.." has full people, sleeping for 5 minutes")
-                sleep(300000)
-                goto BACK
-            end
-        else
-            server = false
-            sleep(5000)
-            print("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes")
-            sleep(250)
-            identity.botinfo("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes@everyone")
-            sleep(300000)
-            goto BACK
-        end
-    end
-	infoid[world] = ""..identity.itemFloat(setting.seed)..""
-end
-
-identity.recheck = function(threads)
-    ::BACK::
-    setJob("Rechecking")
-    sleep(250)
-    identity.door = identity.param
-    identity.warp(threads,identity.door)
-    sleep(250)
-    identity.webhookinfo()
-    sleep(250)
-    if not server then
-        if not people then
-            if not level then
-                if not subserver then
-                    if not nuked then
-                        if not wrong then
-                            for _, tile in pairs(getTiles()) do
-                                for i = 1,2 do
-                                    if tile.fg == 0 and getTile(tile.x, tile.y + 1).flags ~= 0 then
-                                        if setting.mode.splice then
-                                            if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
-                                                identity.take(threads)
-                                                sleep(250)
-                                                goto BACK
-                                            end
-                                        else
-                                            if findItem(setting.seed) == 0 then
-                                                identity.take(threads)
-                                                sleep(250)
-                                                goto BACK
-                                            end
-                                        end
-                                        identity.door = identity.param
-                                        findPath(tile.x,tile.y)
-                                        sleep(setting.delay.plant)
-                                        identity.reconnect(threads,identity.door,tile.x,tile.y)
-                                        if setting.mode.splice then
-                                            while getTile(tile.x,tile.y).fg ~= setting.seed do
-                                                place(setting.seed,0,0)
-                                                sleep(setting.delay.plant)
-                                                identity.reconnect(threads,identity.door,tile.x,tile.y)
-                                            end
-                                            while getTile(tile.x,tile.y).fg == setting.seed do
-                                                place(setting.mode.seed,0,0)
-                                                sleep(setting.delay.plant)
-                                                identity.reconnect(threads,identity.door,tile.x,tile.y)
-                                            end
-                                        else
-                                            if getTile(tile.x,tile.y).fg ~= setting.seed then
-                                                place(setting.seed,0,0)
-                                                sleep(setting.delay.plant)
-                                                identity.reconnect(threads,identity.door,tile.x,tile.y)
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        else
-                            wrong = false
-                            sleep(5000)
-                            identity.botinfo("World : [ ||"..threads.."|| ] is Wrong door, terminated script @everyone")
-                            sleep(250)
-                            print("World : [ "..threads.." ] is Wrong door, terminated script")
-                            sleep(250)
-                            error()
-                        end
-                    else
+                        infoid[world] = "NUKED"
                         nuked = false
                         sleep(5000)
-                        identity.botinfo("World : [ ||"..threads.."|| ] is NUKED @everyone")
-                        sleep(250)
-                        print("World : [ "..threads.." ] is NUKED, terminated script")
-                        sleep(250)
-                        error()
+                        identity.botinfo("Seeds storage : [ ||"..world.."|| ] is NUKED, skipped world @everyone")
+                        print("Seeds storage : [ "..world.." ] is NUKED, skipped world")
+                        identity.takeseed = identity.takeseed + 1
+                        if identity.takeseed > #storage then
+                            identity.botinfo("All seeds storage has empty, Removing bot : [ ||"..getBot().name.."|| ] @everyone")
+                            print("All seeds storage has empty, Removing bot : [ "..getBot().name.." ]")
+                            if removeBot then
+                                removeBot(getBot().name)
+                                sleep(2000)
+                            end
+                            error()
+                        end
                     end
                 else
                     subserver = false
                     sleep(5000)
-                    print("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes")
-                    sleep(250)
-                    identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes @everyone")
-                    sleep(300000)
-                    goto BACK
-                end
-            else
-                level = false
-                sleep(5000)
-                print("World : "..threads.." has level limit, change ur level world limit")
-                sleep(250)
-                identity.botinfo("World : "..threads.." has level limit, change ur level world limit !, terminated script @everyone")
-                sleep(250)
-                error()
-            end
-        else
-            people = false
-            sleep(5000)
-            print("World : "..threads.." has full people, sleeping for 5 minutes")
-            sleep(250)
-            identity.botinfo("World : "..threads.." has full people, sleeping for 5 minutes")
-            sleep(300000)
-            goto BACK
-        end
-    else
-        server = false
-        sleep(5000)
-        print("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes")
-        sleep(250)
-        identity.botinfo("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes@everyone")
-        sleep(300000)
-        goto BACK
-    end
-end
-
-
-identity.plant = function(threads)
-    ::BACK::
-    setJob("Planting")
-    sleep(250)
-    identity.door = identity.param
-    identity.warp(threads,identity.door)
-    sleep(250)
-    identity.webhookinfo()
-    sleep(250)
-    if not server then
-        if not people then
-            if not level then
-                if not subserver then
-                    if not nuked then
-                        if not wrong then
-                            tileA = 99
-                            tileB = 0
-                            tileC = -1
-                            tileD = 0
-                            for y = -1, 53 do
-                                for x = tileA, tileB, tileC do
-                                    if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
-                                        if setting.mode.splice then
-                                            if findItem(setting.seed) == 0 or findItem(setting.mode.seed) == 0 then
-                                                identity.take(threads)
-                                                sleep(250)
-                                                goto BACK
-                                            end
-                                        else
-                                            if findItem(setting.seed) == 0 then
-                                                identity.take(threads)
-                                                sleep(250)
-                                                goto BACK
-                                            end
-                                        end
-                                        identity.door = identity.param
-                                        findPath(x,y)
-                                        sleep(setting.delay.plant)
-                                        identity.reconnect(threads,identity.door,x,y)
-                                        if setting.mode.splice then
-                                            while getTile(x,y).fg ~= setting.seed do
-                                                place(setting.seed,0,0)
-                                                sleep(setting.delay.plant)
-                                                identity.reconnect(threads,identity.door,x,y)
-                                            end
-                                            while getTile(x,y).fg == setting.seed do
-                                                place(setting.mode.seed,0,0)
-                                                sleep(setting.delay.plant)
-                                                identity.reconnect(threads,identity.door,x,y)
-                                            end
-                                        else
-                                            if getTile(x,y).fg ~= setting.seed then
-                                                place(setting.seed,0,0)
-                                                sleep(setting.delay.plant)
-                                                identity.reconnect(threads,identity.param,x,y)
-                                            end
-                                        end
-                                    end
-                                end
-                                if tileD == 1 then
-                                    if tileA == 0 then
-                                        tileA = 99
-                                        tileB = 0
-                                        tileC = -1
-                                        tileD = 0
-                                    elseif tileA == 99 then
-                                        tileA = 0
-                                        tileB = 99
-                                        tileC = 1
-                                        tileD = 0
-                                    end
-                                elseif tileD == 0 then
-                                    tileD = tileD + 1
-                                end
-                            end
-                        else
-                            wrong = false
-                            sleep(5000)
-                            identity.botinfo("World : [ ||"..threads.."|| ] is Wrong door, terminated script @everyone")
-                            sleep(250)
-                            print("World : [ "..threads.." ] is Wrong door, terminated script")
-                            sleep(250)
-                            error()
-                        end
-                    else
-                        nuked = false
-                        sleep(5000)
-                        identity.botinfo("World : [ ||"..threads.."|| ] is NUKED @everyone")
-                        sleep(250)
-                        print("World : [ "..threads.." ] is NUKED, terminated script")
-                        sleep(250)
-                        error()
-                    end
-                else
-                    subserver = false
-                    sleep(5000)
-                    print("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes")
-                    sleep(250)
-                    identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes @everyone")
-                    sleep(300000)
-                    goto BACK
-                end
-            else
-                level = false
-                sleep(5000)
-                print("World : "..threads.." has level limit, change ur level world limit")
-                sleep(250)
-                identity.botinfo("World : "..threads.." has level limit, change ur level world limit !, terminated script @everyone")
-                sleep(250)
-                error()
-            end
-        else
-            people = false
-            sleep(5000)
-            print("World : "..threads.." has full people, sleeping for 5 minutes")
-            sleep(250)
-            identity.botinfo("World : "..threads.." has full people, sleeping for 5 minutes")
-            sleep(300000)
-            goto BACK
-        end
-    else
-        server = false
-        sleep(5000)
-        print("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes")
-        sleep(250)
-        identity.botinfo("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes@everyone")
-        sleep(300000)
-        goto BACK
-    end
-end
-
-identity.dropnpg = function()
-    ::BACK::
-    world = identity.splitt(setting.mode.worldnpg[index],"[^:]+")[1]
-    identity.door = identity.splitt(setting.mode.worldnpg[index],"[^:]+")[2]
-	setJob("Dropping NPG")
-    sleep(250)
-    identity.warp(world,identity.door)
-    sleep(250)
-    if not server then
-        if not people then
-            if not level then
-                if not subserver then
-                    if not nuked then
-                        if not wrong then
-                            while findItem(6086) > 0 do
-                                drop(6086)
-                                sleep(setting.delay.drop)
-                            end
-                        else
-                            wrong = false
-                            sleep(5000)
-                            print("Id door world npg is wrong, check ur id door !!")
-                            sleep(250)
-                            identity.botinfo("Id door world npg is wrong, check ur id door !! @everyone")
-                            sleep(250)
-                            error()
-                        end
-                    else
-                        nuked = false
-                        sleep(5000)
-                        print("World npg is nuked, check ur world !!")
-                        sleep(250)
-                        identity.botinfo("World npg is nuked, check ur world !! @everyone")
-                        sleep(250)
-                        error()
-                    end
-                else
-                    subserver = false
-                    sleep(5000)
-                    print("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes")
-                    sleep(250)
-                    identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes @everyone")
-                    sleep(300000)
+                    print("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
+                    identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
+                    sleep(120000)
                     goto BACK
                 end
             else
                 level = false
                 sleep(5000)
                 print("World : "..world.." has level limit, change ur level world limit")
-                sleep(250)
                 identity.botinfo("World : "..world.." has level limit, change ur level world limit !, terminated script @everyone")
-                sleep(250)
                 error()
             end
         else
             people = false
             sleep(5000)
-            print("World : "..world.." has full people, sleeping for 5 minutes")
-            sleep(250)
-            identity.botinfo("World : "..world.." has full people, sleeping for 5 minutes")
-            sleep(300000)
+            print("World : "..world.." has full people, sleeping for 2 minutes")
+            identity.botinfo("World : "..world.." has full people, sleeping for 2 minutes")
+            sleep(120000)
             goto BACK
         end
+    end
+    infoid[world] = ""..identity.itemFloat(seed)..""
+end
+
+identity.recheck = function(threads)
+    for _, tile in pairs(getTiles()) do
+        for i = 1,2 do
+            if tile.fg == 0 and getTile(tile.x, tile.y + 1).flags ~= 0 then
+                if splice then
+                    if findItem(seed) == 0 or findItem(seedsplice) == 0 then
+                        ::BACK::
+                        identity.take(threads)
+                        if looping then
+                            if findItem(seed) == 0 or findItem(seedsplice) == 0 then
+                                goto BACK
+                            end
+                        end
+                        setJob("Planting")
+                        identity.warp(threads,doorfarmList)
+                        identity.webhookinfo()
+                    end
+                else
+                    if findItem(seed) == 0 then
+                        ::BACK::
+                        identity.take(threads)
+                        if looping then
+                            if findItem(seed) == 0 then
+                                goto BACK
+                            end
+                        end
+                        setJob("Planting")
+                        identity.warp(threads,doorfarmList)
+                        identity.webhookinfo()
+                    end
+                end
+                findPath(tile.x,tile.y)
+                sleep(25)
+                identity.reconnect(threads,doorfarmList,tile.x,tile.y)
+                if splice then
+                    while getTile(tile.x,tile.y).fg ~= seed do
+                        place(seed,0,0)
+                        sleep(plant)
+                        identity.reconnect(threads,doorfarmList,tile.x,tile.y)
+                    end
+                    while getTile(tile.x,tile.y).fg == seed do
+                        place(seedsplice,0,0)
+                        sleep(plant)
+                        identity.reconnect(threads,doorfarmList,tile.x,tile.y)
+                    end
+                else
+                    if getTile(tile.x,tile.y).fg ~= seed then
+                        place(seed,0,0)
+                        sleep(plant)
+                        identity.reconnect(threads,doorfarmList,tile.x,tile.y)
+                    end
+                end
+            end
+        end
+    end
+end
+
+identity.plant = function(threads)
+    tileA = 99
+    tileB = 0
+    tileC = -1
+    tileD = 0
+    for y = -1, 53 do
+        for x = tileA, tileB, tileC do
+            if getTile(x, y).fg == 0 and getTile(x, y + 1).flags ~= 0 then
+                if splice then
+                    if findItem(seed) == 0 or findItem(seedsplice) == 0 then
+                        ::BACK::
+                        identity.take(threads)
+                        if looping then
+                            if findItem(seed) == 0 or findItem(seedsplice) == 0 then
+                                goto BACK
+                            end
+                        end
+                        setJob("Planting")
+                        identity.warp(threads,doorfarmList)
+                        identity.webhookinfo()
+                    end
+                else
+                    if findItem(seed) == 0 then
+                        ::BACK::
+                        identity.take(threads)
+                        if looping then
+                            if findItem(seed) == 0 then
+                                goto BACK
+                            end
+                        end
+                        setJob("Planting")
+                        identity.warp(threads,doorfarmList)
+                        identity.webhookinfo()
+                    end
+                end
+                findPath(x,y)
+                sleep(25)
+                identity.reconnect(threads,doorfarmList,x,y)
+                if splice then
+                    while getTile(x,y).fg ~= seed do
+                        place(seed,0,0)
+                        sleep(plant)
+                        identity.reconnect(threads,doorfarmList,x,y)
+                    end
+                    while getTile(x,y).fg == seed do
+                        place(seed,0,0)
+                        sleep(plant)
+                        identity.reconnect(threads,doorfarmList,x,y)
+                    end
+                else
+                    if getTile(x,y).fg ~= seed then
+                        place(seed,0,0)
+                        sleep(plant)
+                        identity.reconnect(threads,doorfarmList,x,y)
+                    end
+                end
+            end
+        end
+        if tileD == 1 then
+            if tileA == 0 then
+                tileA = 99
+                tileB = 0
+                tileC = -1
+                tileD = 0
+            elseif tileA == 99 then
+                tileA = 0
+                tileB = 99
+                tileC = 1
+                tileD = 0
+            end
+        elseif tileD == 0 then
+            tileD = tileD + 1
+        end
+    end
+end
+
+identity.dropnpg = function()
+    ::BACK::
+    world = identity.splitt(worldnpg[index],"[^:]+")[1]
+    door = identity.splitt(worldnpg[index],"[^:]+")[2]
+	setJob("Dropping NPG")
+    identity.warp(world,door)
+    if not people then
+        if not level then
+            if not subserver then
+                if not nuked then
+                    if not wrong then
+                        while findItem(6086) > 0 do
+                            drop(6086)
+                            sleep(2000)
+                            move(-1,0)
+                            sleep(250)
+                            identity.reconnect(world,door,-1,0)
+                        end
+                    else
+                        wrong = false
+                        sleep(5000)
+                        print("Id door world npg is wrong, check ur id door !!")
+                        identity.botinfo("Id door world npg is wrong, check ur id door !! @everyone")
+                        error()
+                    end
+                else
+                    nuked = false
+                    sleep(5000)
+                    print("World npg is nuked, check ur world !!")
+                    identity.botinfo("World npg is nuked, check ur world !! @everyone")
+                    error()
+                end
+            else
+                subserver = false
+                sleep(5000)
+                print("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
+                identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
+                sleep(120000)
+                goto BACK
+            end
+        else
+            level = false
+            sleep(5000)
+            print("World : "..world.." has level limit, change ur level world limit")
+            identity.botinfo("World : "..world.." has level limit, change ur level world limit !, terminated script @everyone")
+            error()
+        end
     else
-        server = false
+        people = false
         sleep(5000)
-        print("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes")
-        sleep(250)
-        identity.botinfo("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes@everyone")
-        sleep(300000)
+        print("World : "..world.." has full people, sleeping for 2 minutes")
+        identity.botinfo("World : "..world.." has full people, sleeping for 2 minutes")
+        sleep(120000)
         goto BACK
     end
 end
 
 identity.npg = function()
     ::BACK::
-    world = identity.splitt(setting.mode.worldnpg[index],"[^:]+")[1]
-    identity.door = identity.splitt(setting.mode.worldnpg[index],"[^:]+")[2]
+    world = identity.splitt(worldnpg[index],"[^:]+")[1]
+    door = identity.splitt(worldnpg[index],"[^:]+")[2]
     setJob("Taking NPG")
-    sleep(250)
-    identity.warp(world,identity.door)
-    sleep(250)
-    if not server then
-        if not people then
-            if not level then
-                if not subserver then
-                    if not nuked then
-                        if not wrong then
-                            while findItem(6086) == 0 do
-                                for _, obj in pairs(getObjects()) do
-                                    if obj.id == 6086 then
-                                        findPath(math.floor(obj.x / 32),math.floor(obj.y / 32))
-                                        sleep(1000)
-                                        collect(2)
-                                        sleep(1000)
-                                        identity.reconnect(world,identity.door,math.floor(obj.x / 32),math.floor(obj.y / 32))
-                                    end
-                                    if findItem(6086) > 0  then
-                                        break
-                                    end
-                                end
+    identity.warp(world,door)
+    if not people then
+        if not level then
+            if not subserver then
+                if not nuked then
+                    if not wrong then
+                        for _, obj in pairs(getObjects()) do
+                            if obj.id == 6086 then
+                                findPath(math.floor(obj.x / 32),math.floor(obj.y / 32))
+                                sleep(1000)
+                                collect(2)
+                                sleep(1000)
+                                identity.reconnect(world,door,math.floor(obj.x / 32),math.floor(obj.y / 32))
                             end
-                            wear(6086)
-                            sleep(500)
-                            move(-1,0)
-                            sleep(1000)
-                            if findItem(6086) > 1 then
-                                drop(6086,findItem(6086) - 1)
-                                sleep(setting.delay.drop)
+                            if findItem(6086) > 0  then
+                                break
                             end
-                        else
-                            wrong = false
-                            sleep(5000)
-                            print("Id door world npg is wrong, check ur id door !!")
-                            sleep(250)
-                            identity.botinfo("Id door world npg is wrong, check ur id door !! @everyone")
-                            sleep(250)
-                            error()
+                        end
+                        wear(6086)
+                        sleep(1000)
+                        move(-1,0)
+                        sleep(1000)
+                        if findItem(6086) > 1 then
+                            drop(6086,findItem(6086) - 1)
+                            sleep(2000)
+                            identity.reconnect(world,door,math.floor(obj.x / 32),math.floor(obj.y / 32))
                         end
                     else
-                        nuked  = false
+                        wrong = false
                         sleep(5000)
-                        print("World npg is nuked, check ur world !!")
-                        sleep(250)
-                        identity.botinfo("World npg is nuked, check ur world !! @everyone")
-                        sleep(250)
+                        print("Id door world npg is wrong, check ur id door !!")
+                        identity.botinfo("Id door world npg is wrong, check ur id door !! @everyone")
                         error()
                     end
                 else
-                    subserver = false
+                    nuked  = false
                     sleep(5000)
-                    print("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes")
-                    sleep(250)
-                    identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes @everyone")
-                    sleep(300000)
-                    goto BACK
+                    print("World npg is nuked, check ur world !!")
+                    identity.botinfo("World npg is nuked, check ur world !! @everyone")
+                    error()
                 end
             else
-                level = false
+                subserver = false
                 sleep(5000)
-                print("World : "..world.." has level limit, change ur level world limit")
-                sleep(250)
-                identity.botinfo("World : "..world.." has level limit, change ur level world limit !, terminated script @everyone")
-                sleep(250)
-                error()
+                print("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
+                identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
+                sleep(120000)
+                goto BACK
             end
         else
-            people = false
+            level = false
             sleep(5000)
-            print("World : "..world.." has full people, sleeping for 5 minutes")
-            sleep(250)
-            identity.botinfo("World : "..world.." has full people, sleeping for 5 minutes")
-            sleep(300000)
-            goto BACK
+            print("World : "..world.." has level limit, change ur level world limit")
+            identity.botinfo("World : "..world.." has level limit, change ur level world limit !, terminated script @everyone")
+            error()
         end
     else
-        server = false
+        people = false
         sleep(5000)
-        print("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes")
-        sleep(250)
-        identity.botinfo("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes@everyone")
-        sleep(300000)
+        print("World : "..world.." has full people, sleeping for 2 minutes")
+        identity.botinfo("World : "..world.." has full people, sleeping for 2 minutes")
+        sleep(120000)
         goto BACK
     end
 end
@@ -868,70 +692,48 @@ end
 identity.killing = function()
     for _, worlds in pairs(farmList) do
         ::BACK::
-        identity.door = idList
         setJob("Killing ghost")
-        sleep(250)
-        identity.warp(worlds,identity.door)
-        sleep(250)
-        identity.reconnect(worlds,identity.door)
-        sleep(250)
-        if not server then
-            if not people then
-                if not level then
-                    if not subserver then
-                        if not nuked then
-                            if not wrong then
-                                sleep(setting.delay.killghost)
-                            else
-                                wrong = false
-                                sleep(5000)
-                                print(""..worlds.." is wrong door id, skipped world")
-                                sleep(250)
-                                identity.botinfo("[ ||"..worlds.."|| ] is wrong door id, skipped world @everyone")
-                                sleep(250)
-                            end
+        identity.warp(worlds,"")
+        identity.reconnect(worlds,"")
+        if not people then
+            if not level then
+                if not subserver then
+                    if not nuked then
+                        if not wrong then
+                            sleep(kill)
                         else
-                            nuked = false
+                            wrong = false
                             sleep(5000)
-                            print(""..worlds.." is NUKED!, check ur world !!")
-                            sleep(250)
-                            identity.botinfo("[ ||"..worlds.."|| ] is NUKED!, check ur world !! @everyone")
-                            sleep(250)
+                            print(""..worlds.." is wrong door id, skipped world")
+                            identity.botinfo("[ ||"..worlds.."|| ] is wrong door id, skipped world @everyone")
                         end
                     else
-                        subserver = false
+                        nuked = false
                         sleep(5000)
-                        print("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes")
-                        sleep(250)
-                        identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes @everyone")
-                        sleep(300000)
-                        goto BACK
+                        print(""..worlds.." is NUKED!, check ur world !!")
+                        identity.botinfo("[ ||"..worlds.."|| ] is NUKED!, check ur world !! @everyone")
                     end
                 else
-                    level = false
+                    subserver = false
                     sleep(5000)
-                    print("World : "..worlds.." has level limit, change ur level world limit")
-                    sleep(250)
-                    identity.botinfo("World : "..worlds.." has level limit, change ur level world limit !, terminated script @everyone")
-                    sleep(250)
-                    error()
+                    print("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
+                    identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
+                    sleep(120000)
+                    goto BACK
                 end
             else
-                people = false
+                level = false
                 sleep(5000)
-                print("World : "..worlds.." has full people, sleeping for 5 minutes")
-                sleep(250)
-                identity.botinfo("World : "..worlds.." has full people, sleeping for 5 minutes")
-                sleep(300000)
-                goto BACK
+                print("World : "..worlds.." has level limit, change ur level world limit")
+                identity.botinfo("World : "..worlds.." has level limit, change ur level world limit !, terminated script @everyone")
+                error()
             end
         else
-            server = false
+            people = false
             sleep(5000)
-            print("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes")
-            sleep(250)
-            identity.botinfo("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes@everyone")
-            sleep(300000)
+            print("World : "..worlds.." has full people, sleeping for 2 minutes")
+            identity.botinfo("World : "..worlds.." has full people, sleeping for 5 minutes")
+            sleep(120000)
             goto BACK
         end
     end
@@ -943,114 +745,80 @@ identity.writeFile = function(threads)
     file:close()
 end
 
-if BizzantiuM.version == "1.1" and BizzantiuM.handler == "akbarsht" then
-    sleep(math.random(300,3000))
-    if setting.mode.killghost then
+if BizzantiuM.version == "1.2" and BizzantiuM.handler == "akbarsht" then
+    if killghost then
         if findItem(6086) == 0 then
             identity.npg()
-            sleep(250)
             identity.killing()
-            sleep(250)
             identity.dropnpg()
-            sleep(250)
         else
             identity.killing()
-            sleep(250)
             identity.dropnpg()
-            sleep(250)
         end
         print("All ghost are killed, please disable auto kill ghost then re-execute script")
-        sleep(250)
         identity.botinfo("All ghost are killed, please disable auto kill ghost then re-execute script @everyone")
-        sleep(250)
         error()
     end
 	for idx , value in ipairs(worlds) do
         ::BACK::
-		identity.door = setting.farmList.door
 		setJob("Planting")
-        sleep(250)
-		identity.warp(value,identity.door)
-        sleep(250)
+		identity.warp(value,doorfarmList)
         identity.webhookinfo()
-        sleep(250)
-        if not server then
-            if not people then
-                if not level then
-                    if not subserver then
-                        if not nuked then
-                            if not wrong then
-                                identity.plant(value)
-                                sleep(250)
-                                identity.recheck(value)
-                                sleep(250)
-                            else
-                                identity.writeFile("[ "..value.." ] is wrong id")
-                                sleep(1000)
-                                wrong = false
-                                sleep(5000)
-                                print("[ "..value.." ] is wrong door id, skipped world")
-                                sleep(250)
-                                identity.botinfo("[ ||"..value.."|| ] is wrong door id, skipped world !! @everyone")
-                                sleep(250)
-                            end
+        if not people then
+            if not level then
+                if not subserver then
+                    if not nuked then
+                        if not wrong then
+                            identity.plant(value)
+                            identity.recheck(value)
                         else
-                            identity.writeFile("[ "..value.." ] is NUKED !!")
+                            identity.writeFile("[ "..value.." ] is wrong id")
                             sleep(1000)
-                            nuked = false
+                            wrong = false
                             sleep(5000)
-                            print(""..value.." is NUKED!, check ur world !!")
-                            sleep(250)
-                            identity.botinfo("[ ||"..value.."|| ] is NUKED!, check ur world !! @everyone")
-                            sleep(250)
+                            print("[ "..value.." ] is wrong door id, skipped world")
+                            identity.botinfo("[ ||"..value.."|| ] is wrong door id, skipped world !! @everyone")
                         end
                     else
-                        subserver = false
+                        identity.writeFile("[ "..value.." ] is NUKED !!")
+                        sleep(1000)
+                        nuked = false
                         sleep(5000)
-                        print("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes")
-                        sleep(250)
-                        identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 5 minutes @everyone")
-                        sleep(300000)
-                        goto BACK
+                        print(""..value.." is NUKED!, check ur world !!")
+                        identity.botinfo("[ ||"..value.."|| ] is NUKED!, check ur world !! @everyone")
                     end
                 else
-                    level = false
+                    subserver = false
                     sleep(5000)
-                    print("World : "..value.." has level limit, change ur level world limit")
-                    sleep(250)
-                    identity.botinfo("World : "..value.." has level limit, change ur level world limit !, terminated script @everyone")
-                    sleep(250)
-                    error()
+                    print("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
+                    identity.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
+                    sleep(120000)
+                    goto BACK
                 end
             else
-                people = false
+                level = false
                 sleep(5000)
-                print("World : "..value.." has full people, sleeping for 5 minutes")
-                sleep(250)
-                identity.botinfo("World : "..value.." has full people, sleeping for 5 minutes")
-                sleep(300000)
-                goto BACK
+                print("World : "..value.." has level limit, change ur level world limit")
+                identity.botinfo("World : "..value.." has level limit, change ur level world limit !, terminated script @everyone")
+                error()
             end
         else
-            server = false
+            people = false
             sleep(5000)
-            print("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes")
-            sleep(250)
-            identity.botinfo("Bot : "..getBot().name.." idiot server, sleeping for 5 minutes@everyone")
-            sleep(300000)
+            print("World : "..value.." has full people, sleeping for 2 minutes")
+            identity.botinfo("World : "..value.." has full people, sleeping for 2 minutes")
+            sleep(120000)
             goto BACK
         end
     end
     print("Allready finished all world, removing bot!")
-    sleep(250)
     identity.botinfo("[ ||"..getBot().name.."|| ] Allready finished all world, removing bot! @everyone")
-    sleep(250)
-    if setting.removeBot then
+    if removeBot then
         removeBot(getBot().name)
         sleep(2000)
     end
     error()
 else
     print("This script made by BizzantuM's server, buy at another server = RESELLER !!")
-    sleep(250)
+    error()
 end
