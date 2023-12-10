@@ -112,7 +112,7 @@ end
 
 identity.reconnect = function(world,id,x,y)
     if getBot().world == "EXIT" and getBot().status == "online" then 
-        identity.botinfo("[ ||"..getBot().name.."|| ] at another world ??, trying to joining world again @everyone")
+        identity.botinfo("[ ||"..getBot().name.."|| ] at EXIT ??, trying to joining world again @everyone")
         local count = 0
         while getBot().world ~= world:upper() do
             sendPacket("action|join_request\nname|"..world:upper().."\ninvitedWorld|0",3)
@@ -577,7 +577,6 @@ identity.dropnpg = function()
                             sleep(2000)
                             move(-1,0)
                             sleep(250)
-                            identity.reconnect(world,door,-1,0)
                         end
                     else
                         wrong = false
@@ -648,7 +647,6 @@ identity.npg = function()
                         if findItem(6086) > 1 then
                             drop(6086,findItem(6086) - 1)
                             sleep(2000)
-                            identity.reconnect(world,door,math.floor(obj.x / 32),math.floor(obj.y / 32))
                         end
                     else
                         wrong = false
